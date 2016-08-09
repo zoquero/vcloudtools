@@ -1,6 +1,8 @@
 # vcloudtools
 **Tools for working with vCloud Director**
 
+These tools allow makes it easer to look for vShield Edge firewall rules when troubleshooting communications on your vDCs. It also allows to dump your infraestructure to CSV or XML, it helps to backup your configuration, to plug your cloud to your CMDB (manual integration, if your CMDB doesn't support vCloud API), to account our usage, a step towards monitoring, ...
+
 It **requires** [vCloud SDK for PHP for vCloud Suite 5.5](https://developercenter.vmware.com/web/sdk/5.5.0/vcloud-php). Don't forget to add it's folder to your **```include_path```** setting in your php.ini
 
 Tested on Ubuntu 15.04 64b with PHP 5.6.4 against vCloud Director 5.5
