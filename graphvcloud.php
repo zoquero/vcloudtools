@@ -233,20 +233,19 @@ print "DEBUG: " . $vseNet . "\n";
       }
 
       ## vApps
-
       $aREArray=array();
       foreach ($sdkVdc->getVdc()->getResourceEntities()->getResourceEntity() as $aRE) {
         $aType=preg_replace('/^application\/vnd\.vmware\.vcloud\./', '', $aRE->get_type());
         $aType=preg_replace('/\+xml$/', '', $aType);
         if($aType === "vApp") {
-          $aVApp = $service->createSDKObj($aRE->get_href());
-print "DEBUG: a vApp: " . $aVApp->getVapp()->get_name() . "\n";
+          $aSdkVApp = $service->createSDKObj($aRE->get_href());
+
+          $vApp=vApp2obj($vdc, $aSdkVApp);
+
+# print "DEBUG: a vApp: " . $aSdkVApp->getVapp()->get_name() . "\n";
+print "DEBUG: a vApp: " . $vApp . "\n";
         }
-        array_push($aREArray, "[" . $aType . ": " . $aRE->get_name() . "]");
       }
-
-
-
 
 
     }
@@ -935,5 +934,22 @@ function vseNetwork2obj(&$org, &$vdc, &$vse, &$gatewayInterface) {
 # $gatewayInterface->getName() vs $gatewayInterface->getNetwork()->get_name() ????
   return new VseNetwork($gatewayInterface->getName() /*, $vse->vdc->org, $vse->vdc */, $vse);
 }
+
+/**
+ * Returns a new vApp object
+ *
+ * @return a new Vapp object representing that vApp
+ * @param $vdc The Virtual DataCenter object from this lib, passed by reference
+ * @param $sdkVApp The vApp taken from the SDK, passed by reference
+ */
+function vApp2obj(&$vdc, &$sdkVApp) {
+  $networks=array();
+  foreach($sdkVApp->getNetworkSettings()->getNetwork() as $aNetwork) {
+    array_push($networks, $aNetwork->get_name());
+  }
+  return new vApp($sdkVApp->getVapp()->get_name(), $sdkVApp->getVapp()->get_id(), $sdkVApp->getStatus(), $networks, $vdc);
+}
+
+
 
 ?>
