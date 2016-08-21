@@ -1,0 +1,106 @@
+<?php
+
+/**
+ * A vCloud Organization
+ */
+class Org {
+  public $name = '';
+  public $enabled = false;
+
+  public function __construct($_name, $_enabled) {
+    $this->name = $_name;
+    if($_enabled === true || $_enabled === 1) {
+      $this->enabled = true;
+    }
+    else {
+      $this->enabled = false;
+    }
+  }
+
+  public function __toString() {
+    $e = ($this->enabled) ? 'enabled' : 'disabled';
+    return "Organization '" . $this->name . "' " . $e;
+  }
+
+}
+
+/**
+ * A vCloud Virtual DataCenter
+ */
+class Vdc {
+  public $name = '';
+  public $id   = '';
+  public $org  = null;
+
+  public function __construct($_name, $_id, &$_org) {
+    $this->name = $_name;
+    $this->id = $_id;
+    $this->org  = $_org;
+  }
+
+  public function __toString() {
+    $org = $this->org;
+    return "vDC with name='" . $this->name . "', id='" . $this->id . "' from org '" . $org->name . "'";
+  }
+}
+
+/**
+ * A vShield Edge
+ */
+class Vse {
+  public $name   = '';
+  public $id     = '';
+  public $status = 0;
+  public $org    = null;
+  public $vdc    = null;
+
+  public function __construct($_name, $_id, $_status, &$_org, &$_vdc) {
+    $this->name = $_name;
+    $this->id = $_id;
+    $this->status = $_status;
+    $this->org  = $_org;
+    $this->vdc  = $_vdc;
+  }
+
+  public function __toString() {
+    $org = $this->org;
+    $vdc = $this->vdc;
+    return "vShield Edge with name='" . $this->name . "', id='" . $this->id . "', status='" . $this->status . "' from org '" . $org->name . "' and vdc '" . $vdc->name . "'";
+  }
+}
+
+/**
+ * A vShield Edge
+ */
+class VseNetwork {
+  public $name   = '';
+/*
+  TO_DO: Must understand what's each "Subnet Participation" on each GatewayInterface
+  public $gw     = '';
+  public $mask   = '';
+*/
+  public $org    = null;
+  public $vdc    = null;
+  public $vse    = null;
+
+  public function __construct($_name, /* $_gw, $_mask, */ &$_org, &$_vdc, &$_vse) {
+    $this->name = $_name;
+/*
+    $this->gw   = $_gw;
+    $this->mask = $_mask;
+*/
+    $this->org  = $_org;
+    $this->vdc  = $_vdc;
+    $this->vse  = $_vse;
+  }
+
+  public function __toString() {
+    $org = $this->org;
+    $vdc = $this->vdc;
+    $vse = $this->vse;
+    return "vShield Edge Network with name='" . $this->name . /* "', gateway='" . $this->gw . "', mask='" . $this->mask . */ "' from org '" . $org->name . "', vdc '" . $vdc->name . "' and vShield Edge '" . $vse->name . "'";
+  }
+
+}
+
+?>
