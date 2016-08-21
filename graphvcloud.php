@@ -241,9 +241,87 @@ print "DEBUG: " . $vseNet . "\n";
           $aSdkVApp = $service->createSDKObj($aRE->get_href());
 
           $vApp=vApp2obj($vdc, $aSdkVApp);
-
-# print "DEBUG: a vApp: " . $aSdkVApp->getVapp()->get_name() . "\n";
 print "DEBUG: a vApp: " . $vApp . "\n";
+
+          foreach ($aSdkVApp->getVapp()->getChildren()->getVM() as $aVM) {
+            # Empirically:
+            # * status=3 == Suspended
+            # * status=4 == PoweredOn
+            # * status=8 == PoweredOff
+print "DEBUG: VM: name=" .  $aVM->get_name() . ", status=" . $aVM->get_status() . "\n";
+#           $aVM->get_name()
+#           $aVM->get_status()
+
+
+print "\nDEBUG:\n";
+showObject($aVM);
+exit(1);
+  This is an object of class VMware_VCloud_API_VmType
+  Public methods:
+   * __construct
+   * getVAppScopedLocalId
+   * setVAppScopedLocalId
+   * getEnvironment
+   * setEnvironment
+   * getVmCapabilities
+   * setVmCapabilities
+   * getStorageProfile
+   * setStorageProfile
+   * get_needsCustomization
+   * set_needsCustomization
+   * get_nestedHypervisorEnabled
+   * set_nestedHypervisorEnabled
+   * get_tagName
+   * set_tagName
+   * export
+   * build
+   * getVAppParent
+   * setVAppParent
+   * getSection
+   * setSection
+   * addSection
+   * getDateCreated
+   * setDateCreated
+   * get_deployed
+   * set_deployed
+   * getFiles
+   * setFiles
+   * get_status
+   * set_status
+   * getDescription
+   * setDescription
+   * getTasks
+   * setTasks
+   * get_name
+   * set_name
+   * get_operationKey
+   * set_operationKey
+   * get_id
+   * set_id
+   * getLink
+   * setLink
+   * addLink
+   * get_href
+   * set_href
+   * get_type
+   * set_type
+   * getVCloudExtension
+   * setVCloudExtension
+   * addVCloudExtension
+   * get_anyAttributes
+   * set_anyAttributes
+array(1) {
+  ["anyAttributes"]=>
+  array(0) {
+  }
+}
+
+
+
+
+          }
+
+
         }
       }
 
@@ -309,6 +387,8 @@ function showObject($o) {
   foreach ($egMethods as $aMethod) {
     echo "   * $aMethod\n";
   }
+
+  var_dump(get_object_vars($o));
 }
 
 
