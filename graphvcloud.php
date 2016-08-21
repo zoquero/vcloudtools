@@ -230,167 +230,28 @@ print "DEBUG: " . $vse . "\n";
 print "DEBUG: " . $vseNet . "\n";
 #exit(1);
         }
-
-#       $edgeGateway = $edgeGatewayObj->getEdgeGateway();
-#       $edgeGatewayConfig = $edgeGateway->getConfiguration();
-#       $edgeGatewayServiceConfiguration=$edgeGatewayConfig->getEdgeGatewayServiceConfiguration();
-#       $edgeGatewayNetworkServices = $edgeGatewayServiceConfiguration->getNetworkService();
-        $edgeGatewayNetworkServices = $edgeGatewayObj->getEdgeGateway()->getConfiguration()->getEdgeGatewayServiceConfiguration()->getNetworkService();
-
-        if($format == "csv") {
-          fwrite($vSEFp, $sdkOrg->getOrg()->get_name() . $colSep . $sdkVdc->getVdc()->get_name() . $colSep . vSE2CsvRow($edgeGatewayObj) . "\n");
-
-          foreach($edgeGatewayNetworkServices as $index => $edgeGatewayNetworkService) {
-            if(get_class($edgeGatewayNetworkService) === "VMware_VCloud_API_FirewallServiceType") {
-              # EdgeGateway getConfiguration getEdgeGatewayServiceConfiguration, VMware_VCloud_API_FirewallServiceType component:
-              echo "---* Firewall rules\n";
-  
-              $fwSvcInfo  = $edgeGatewayNetworkService->getDefaultAction() . $colSep;
-              $fwSvcInfo .= $edgeGatewayNetworkService->getLogDefaultAction() . $colSep;
-              $fwSvcInfo .= $edgeGatewayNetworkService->getIsEnabled();
-  
-              $firewallRules=$edgeGatewayNetworkService->getFirewallRule();
-  
-              foreach($firewallRules as $firewallRule) {
-                fwrite($frFp, $sdkOrg->getOrg()->get_name() . $colSep . $sdkVdc->getVdc()->get_name() . $colSep . $edgeGatewayRef->get_name() . $colSep . $fwSvcInfo . $colSep . firewallRule2CsvRow($firewallRule) . "\n");
-              }
-            }
-            else if(get_class($edgeGatewayNetworkService) === "VMware_VCloud_API_NatServiceType") {
-              echo "---* NAT rules\n";
-              # showObject($edgeGatewayNetworkService);
-              $natSvc=$edgeGatewayNetworkService;
-              
-              $natSvcInfo  = $natSvc->getNatType() . $colSep;
-              $natSvcInfo .= $natSvc->getPolicy() . $colSep;
-              $natSvcInfo .= $natSvc->getExternalIp() . $colSep;
-              $natSvcInfo .= $natSvc->get_tagName() . $colSep;
-              $natSvcInfo .= $natSvc->getIsEnabled();
-              # $natSvcInfo .= $natSvc->getVCloudExtension() . $colSep;
-              # $natSvcInfo .= $natSvc->anyAttributes() . $colSep;
-    
-              $natRules=$natSvc->getNatRule();
-              foreach ($natRules as $aNatRule) {
-                fwrite($nrFp, $sdkOrg->getOrg()->get_name() . $colSep . $sdkVdc->getVdc()->get_name() . $colSep . $edgeGatewayRef->get_name() . $colSep  . $natSvcInfo . $colSep . natRule2CsvRow($aNatRule) . "\n");
-              }
-            }
-            else if(get_class($edgeGatewayNetworkService) === "VMware_VCloud_API_LoadBalancerServiceType") {
-  ## 
-  ## LoadBalancing pool [] : key ->getName()
-  ##   LBPoolServicePort []
-  ##     HealthCheck []
-  ##   LBPoolMember []
-  ##     LBPoolMemberServicePort []
-  ## VirtualServer []
-  ##   VSServiceProfile []
-  ## 
-  
-              echo "---* LoadBalancing rules\n";
-              # TO_DO: to CSV
-              fwrite($lbFp, "LoadBalancing pools:\n");
-              foreach ($edgeGatewayNetworkService->getPool() as $aPool) {
-                fwrite($lbFp, "  pool id=" . $aPool->getId() . "\n");
-                fwrite($lbFp, "  pool name=" . $aPool->getName() . "\n");
-                fwrite($lbFp, "  pool desc=" . $aPool->getDescription() . "\n");
-                fwrite($lbFp, "  pool serviceports= array: \n");
-                foreach ($aPool->getServicePort() as $aServicePort) {
-                  fwrite($lbFp, "    a pool servicePort: \n");
-                  fwrite($lbFp, "      enabled = " . $aServicePort->getIsEnabled() . "\n");
-                  fwrite($lbFp, "      Protocol = " . $aServicePort->getProtocol() . "\n");
-                  fwrite($lbFp, "      Algorithm = " . $aServicePort->getAlgorithm() . "\n");
-                  fwrite($lbFp, "      Port = " . $aServicePort->getPort() . "\n");
-                  fwrite($lbFp, "      HealthCheckPort = " . $aServicePort->getHealthCheckPort() . "\n");
-                  fwrite($lbFp, "      HealthChecks : \n");
-                  foreach ($aServicePort->getHealthCheck() as $aHealthCheck) {
-                    fwrite($lbFp, "      a HealthCheck : \n");
-                    fwrite($lbFp, "        Mode: " . $aHealthCheck->getMode() . "\n");
-                    fwrite($lbFp, "        Uri: " . $aHealthCheck->getUri() . "\n");
-                    fwrite($lbFp, "        HealthThreshold: " . $aHealthCheck->getHealthThreshold() . "\n");
-                    fwrite($lbFp, "        UnhealthThreshold: " . $aHealthCheck->getUnhealthThreshold() . "\n");
-                    fwrite($lbFp, "        Interval: " . $aHealthCheck->getInterval() . "\n");
-                    fwrite($lbFp, "        Timeout: " . $aHealthCheck->getTimeout() . "\n");
-                  }
-                }
-                
-                fwrite($lbFp, "  pool member= array:\n");
-                foreach ($aPool->getMember() as $aMember) {
-                  fwrite($lbFp, "    a pool member : \n");
-                  fwrite($lbFp, "      IpAddress: " . $aMember->getIpAddress() . "\n");
-                  fwrite($lbFp, "      Weight: " . $aMember->getWeight() . "\n");
-                  fwrite($lbFp, "      ServicePorts: \n");
-                  foreach($aMember->getServicePort() as $aServicePort) {
-                    fwrite($lbFp, "      a pool member ServicePort: \n");
-                    fwrite($lbFp, "        IsEnabled: " . $aServicePort->getIsEnabled() . "\n");
-                    fwrite($lbFp, "        Protocol: " . $aServicePort->getProtocol() . "\n");
-                    fwrite($lbFp, "        Algorithm: " . $aServicePort->getAlgorithm() . "\n");
-                    fwrite($lbFp, "        Port: " . $aServicePort->getPort() . "\n");
-                    fwrite($lbFp, "        HealthCheckPort: " . $aServicePort->getHealthCheckPort() . "\n");
-                    fwrite($lbFp, "        HealthChecks:\n");
-                    foreach($aServicePort->getHealthCheck() as $aHealthCheck) {
-                      fwrite($lbFp, "          : " . $aHealthCheck . "\n");
-                    }
-                  }
-                }
-                
-                fwrite($lbFp, "  pool operational=" . $aPool->getOperational() . "\n");
-                fwrite($lbFp, "  pool errordetails=" . $aPool->getErrorDetails() . "\n");
-              }
-  
-              fwrite($lbFp, "VirtualServers: \n");
-              foreach ($edgeGatewayNetworkService->getVirtualServer() as $aVS) {
-                fwrite($lbFp, "  a VirtualServer:\n");
-                fwrite($lbFp, "    IsEnabled: " . $aVS->getIsEnabled() . "\n");
-                fwrite($lbFp, "    Name: " . $aVS->getName() . "\n");
-                fwrite($lbFp, "    Description: " . $aVS->getDescription() . "\n");
-                fwrite($lbFp, "    Interface: " . $aVS->getInterface()->get_name() . "\n");
-                fwrite($lbFp, "    IpAddress: " . $aVS->getIpAddress() . "\n");
-                fwrite($lbFp, "    VirtualServer: ServiceProfiles:\n");
-                foreach($aVS->getServiceProfile() as $aServiceProfile) {
-                  fwrite($lbFp, "      a VirtualServer's  ServiceProfile:\n");
-                  fwrite($lbFp, "        IsEnabled: " . $aServiceProfile-> getIsEnabled() . "\n");
-                  fwrite($lbFp, "        Protocol: " . $aServiceProfile-> getProtocol() . "\n");
-                  fwrite($lbFp, "        Port: " . $aServiceProfile-> getPort() . "\n");
-                  fwrite($lbFp, "        Persistence:\n");
-                  fwrite($lbFp, "        Persistence: Method: " . $aServiceProfile->getPersistence()->getMethod() . "\n");
-                  fwrite($lbFp, "        Persistence: CookieName: " . $aServiceProfile->getPersistence()->getCookieName() . "\n");
-                  fwrite($lbFp, "        Persistence: CookieMode: " . $aServiceProfile->getPersistence()->getCookieMode() . "\n");
-                }
-                fwrite($lbFp, "    Logging: " . $aVS->getLogging() . "\n");
-                fwrite($lbFp, "    Pool: " . $aVS->getPool() . "\n");
-                fwrite($lbFp, "    LoadBalancerTemplates:\n");
-                foreach($aVS->getLoadBalancerTemplates() as $aLoadBalancerTemplate) {
-                  echo "Unimplemented: edgeGatewayNetworkService->getVirtualServer()[]->getLoadBalancerTemplates()[].\n";
-                  break;
-                }
-  
-              }
-              fwrite($lbFp, "edgeGatewayNetworkService enabled=" . $edgeGatewayNetworkService->getIsEnabled() . "\n");
-            }
-            else {
-              echo "Unsupported service \"". get_class($edgeGatewayNetworkService) . "\"\n";
-            }
-          }
-        }
-        else {
-          $vseFolder = $vdcFolder . '/vse/' . $edgeGatewayObj->getEdgeGateway()->get_name();
-          #       dirname   , basename , exportingEntity
-          saveXml($vseFolder, 'vse.xml', $edgeGatewayObj->getEdgeGateway());
-          # includes: it's configuration and it's network services (NAT, firewall, load balancing, ...)
-        }
-
       }
+
+      ## vApps
+
+      $aREArray=array();
+      foreach ($sdkVdc->getVdc()->getResourceEntities()->getResourceEntity() as $aRE) {
+        $aType=preg_replace('/^application\/vnd\.vmware\.vcloud\./', '', $aRE->get_type());
+        $aType=preg_replace('/\+xml$/', '', $aType);
+        if($aType === "vApp") {
+          $aVApp = $service->createSDKObj($aRE->get_href());
+print "DEBUG: a vApp: " . $aVApp->getVapp()->get_name() . "\n";
+        }
+        array_push($aREArray, "[" . $aType . ": " . $aRE->get_name() . "]");
+      }
+
+
+
+
+
     }
   }
 
-  if($format == "csv") {
-    fclose($orgFp);
-    fclose($vDcFp);
-    fclose($vSEFp);
-    fclose($frFp);
-    fclose($nrFp);
-    fclose($lbFp);
-    fclose($vApFp );
-    fclose($vMFp  );
-  }
 }
 else {
     echo "\nLogin Failed due to certification mismatch.";
@@ -1072,7 +933,7 @@ function vse2obj(&$org, &$vdc, &$vse) {
  */
 function vseNetwork2obj(&$org, &$vdc, &$vse, &$gatewayInterface) {
 # $gatewayInterface->getName() vs $gatewayInterface->getNetwork()->get_name() ????
-  return new VseNetwork($gatewayInterface->getName(), $org, $vdc, $vse);
+  return new VseNetwork($gatewayInterface->getName() /*, $vse->vdc->org, $vse->vdc */, $vse);
 }
 
 ?>

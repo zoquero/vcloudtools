@@ -83,15 +83,25 @@ class VseNetwork {
   public $vdc    = null;
   public $vse    = null;
 
-  public function __construct($_name, /* $_gw, $_mask, */ &$_org, &$_vdc, &$_vse) {
+  public function __construct($_name, /* $_gw, $_mask, */ /* &$_org, &$_vdc, */ &$_vse) {
     $this->name = $_name;
 /*
     $this->gw   = $_gw;
     $this->mask = $_mask;
 */
-    $this->org  = $_org;
-    $this->vdc  = $_vdc;
+
+/*
+$___org=$_vdc->org;
+#   $this->org  = $_org;
+    $this->org  = $___org;
+#   $this->vdc  = $_vdc;
+    $this->vdc  = $_vse->vdc;
     $this->vse  = $_vse;
+*/
+    $this->vse  = $_vse;
+    $this->vdc  = $_vse->vdc;
+    $this->org  = $_vse->vdc->org;
+
   }
 
   public function __toString() {
