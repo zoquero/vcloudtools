@@ -49,7 +49,7 @@ $longs  = array(
     "pswd:",      //-p|--pswd      [required]
     "sdkver:",    //-v|--sdkver    [required]
     "certpath:",  //-e|--certpath  [optional] local certificate path
-    "dir:",       //-o|--dir       [required]
+    "output:",    //-o|--output       [required]
 );
 
 $opts = getopt($shorts, $longs);
@@ -99,23 +99,22 @@ foreach (array_keys($opts) as $opt) switch ($opt) {
         break;
 
     case "o":
-        $oDir = $opts['o'];
+        $oFile = $opts['o'];
         break;
-    case "dir":
-        $oDir = $opts['dir'];
+    case "output":
+        $oFile = $opts['output'];
         break;
 }
 
 // parameters validation
-if (!isset($server) || !isset($user) || !isset($pswd) || !isset($sdkversion) || !isset($oDir)) {
+if (!isset($server) || !isset($user) || !isset($pswd) || !isset($sdkversion) || !isset($oFile)) {
     echo "Error: missing required parameters\n";
     usage();
     exit(1);
 }
 
-if (!is_dir($oDir)) {
-  mkdir($oDir, 0700);
-  echo "Error: $oDir is not a directory and cannot be created\n";
+if (file_exists($oFile)) {
+  echo "Error: $oFile already exists\n";
   usage();
   exit(1);
 }
@@ -281,15 +280,15 @@ function usage() {
     echo "     Generates a GraphViz diagram representing your vCloud Infraestructure.\n";
     echo "\n";
     echo "  [Usage]\n";
-    echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --dir <dir>\n";
-    echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <dir>\n";
+    echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file>\n";
+    echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file>\n";
     echo "\n";
     echo "     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director.\n";
     echo "     -u|--user <username>             [req] User name in the form user@organization\n";
     echo "                                           for the vCloud Director.\n";
     echo "     -p|--pswd <password>             [req] Password for user.\n";
     echo "     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5.\n";
-    echo "     -o|--dir <directory>             [req] Folder where CSVs will be craeted.\n";
+    echo "     -o|--output <file>               [req] Folder where CSVs will be craeted.\n";
     echo "\n";
     echo "  [Options]\n";
     echo "     -e|--certpath <certificatepath>  [opt] Local certificate's full path.\n";
@@ -297,7 +296,7 @@ function usage() {
     echo "  You can set the security parameters like server, user and pswd in 'config.php' file\n";
     echo "\n";
     echo "  [Examples]\n";
-    echo "     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --dir /tmp/vc\n\n";
+    echo "     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --output /tmp/vc.dot\n\n";
 
 }
 
@@ -1002,12 +1001,20 @@ function vm2obj(&$vdc, &$sdkVM) {
   return new VM($sdkVM->get_name(), $sdkVM->get_id(), $sdkVM->get_status(), $vmNetworks, $vdc);
 }
 
+
+function simplifyString($str) {
+  $r = str_replace('-', '_', $str);
+  $r = str_replace(':', '_', $r);
+  return $r;
+}
+
 /**
  * Generates a GraphViz diagram
  *
- * @param $vdc The Virtual DataCenter object from this lib, passed by reference
- * @param $aVM The VM taken from the SDK, passed by reference
-
+ * See also:
+ * * Node  shapes: http://www.graphviz.org/doc/info/shapes.html
+ * * Arrow shapes: http://www.graphviz.org/doc/info/arrows.html
+ *
  * @param $orgs Array of organizations
  * @param $vdcs Array of Virtual Datacenters
  * @param $vses Array of vShield Edges
@@ -1018,35 +1025,80 @@ function vm2obj(&$vdc, &$sdkVM) {
 
  */
 function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
-  print "Orgs:\n";
-  print "========\n";
-  var_dump($orgs);
+  global $oFile;
 
-  print "vDCs:\n";
-  print "========\n";
-  var_dump($vdcs);
+  ($fp = fopen($oFile, 'w')) || die ("Can't open output file $oFile");
 
-  print "vSEs:\n";
-  print "========\n";
-  var_dump($vses);
+  fwrite($fp, "digraph vCloud {"                                . PHP_EOL);
+  fwrite($fp, "  rankdir=BT;    # LR RL BT TB"                  . PHP_EOL);
+  fwrite($fp, "  splines=false; # avoid curve lines"            . PHP_EOL);
 
-  print "vseNets:\n";
-  print "========\n";
-  var_dump($vseNets);
+  fwrite($fp, "  {"                                             . PHP_EOL);
+  fwrite($fp, "    node [style=filled, fillcolor=\"#C0C0C0\"];" . PHP_EOL);
+  fwrite($fp, "    org -> vDC -> vSE -> network -> vApp -> VM"  . PHP_EOL);
+  fwrite($fp, ""                                                . PHP_EOL);
+  fwrite($fp, "    org     [shape=house];"                      . PHP_EOL);
+  fwrite($fp, "    vDC     [shape=invhouse];"                   . PHP_EOL);
+  fwrite($fp, "    vSE     [shape=doublecircle];"               . PHP_EOL);
+  fwrite($fp, "    network [shape=parallelogram];"              . PHP_EOL);
+  fwrite($fp, "    vApp    [shape=Msquare];"                    . PHP_EOL);
+  fwrite($fp, "    VM      [shape=box];"                        . PHP_EOL);
+  fwrite($fp, "  }"                                             . PHP_EOL);
 
-  print "vApps:\n";
-  print "========\n";
-  var_dump($vapps);
+# print "Orgs:\n";
+# print "========\n";
+# var_dump($orgs);
 
-  print "VMs:\n";
-  print "========\n";
-  var_dump($vms);
+  fwrite($fp, "  # Orgs"                                  . PHP_EOL);
+  fwrite($fp, "  {"                                       . PHP_EOL);
+  fwrite($fp, "    node [shape=house];"                   . PHP_EOL);
 
-  print "Storge Profiles: (PENDING, TO_DO)\n";
-  print "========\n";
-  var_dump($storProfs);
+  foreach($orgs as $aOrg) {
+    $id=simplifyString($aOrg->name);
+    fwrite($fp, "    $id [label=\"" . $aOrg->name . "\"]" . PHP_EOL);
+    fwrite($fp, "    rank = same; org; $id;"              . PHP_EOL);
+  }
+  fwrite($fp, "  }"                                       . PHP_EOL);
 
-  print "\nStill working on nit... next step is to generate the GraphViz diagram\n";
+
+# print "vDCs:\n";
+# print "========\n";
+# var_dump($vdcs);
+
+  fwrite($fp, "  # vDCs"                                  . PHP_EOL);
+  fwrite($fp, "  {"                                       . PHP_EOL);
+  fwrite($fp, "    node [shape=invhouse];"                . PHP_EOL);
+
+  foreach($vdcs as $aVdc) {
+    $id=simplifyString($aVdc->id);
+    fwrite($fp, "    $id [label=\"" . $aVdc->name . "\"]" . PHP_EOL);
+    fwrite($fp, "    rank = same; vDC; $id;"              . PHP_EOL);
+  }
+  fwrite($fp, "  }"                                       . PHP_EOL);
+
+# print "vSEs:\n";
+# print "========\n";
+# var_dump($vses);
+
+# print "vseNets:\n";
+# print "========\n";
+# var_dump($vseNets);
+
+# print "vApps:\n";
+# print "========\n";
+# var_dump($vapps);
+
+# print "VMs:\n";
+# print "========\n";
+# var_dump($vms);
+
+# print "Storge Profiles: (PENDING, TO_DO)\n";
+# print "========\n";
+# var_dump($storProfs);
+
+  fwrite($fp, "}" . PHP_EOL);
+  fclose($fp) || die ("Can't close output file");
+
 }
 
 ?>
