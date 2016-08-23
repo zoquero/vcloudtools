@@ -1,7 +1,7 @@
 # vcloudtools
 **Tools for working with vCloud Director**
 
-These tools make it easer to look for vShield Edge firewall rules when troubleshooting communications on your vDCs. It also allows you to dump your infraestructure to CSV or XML, it helps to backup your configuration, to plug your cloud to your CMDB (manual integration, if your CMDB doesn't support vCloud API), to account our usage, a step towards monitoring, ... vCloud Director web UI is the tool to manage your cloud, but these non-interactive tools can help you in some situations.
+These tools make it easer to look for vShield Edge firewall rules when troubleshooting communications on your vDCs. It also allows you to dump your infraestructure to CSV or XML and to generate a graph representing it all. It helps to backup your configuration, to plug your cloud to your CMDB (manual integration, if your CMDB doesn't support vCloud API), to account our usage, a step towards monitoring, ... vCloud Director web UI is the tool to manage your cloud, but these non-interactive tools can help you in some situations.
 
 It **requires** [vCloud SDK for PHP for vCloud Suite 5.5](https://developercenter.vmware.com/web/sdk/5.5.0/vcloud-php). Don't forget to add it's folder to your **```include_path```** setting in your php.ini
 
@@ -45,7 +45,7 @@ zoquero at gmail dot com
 
 ### Usage
 ```
-   [Description]
+  [Description]
      Gets matching firewall rules on the vShield Edges of your organizations.
 
   [Usage]
@@ -71,6 +71,36 @@ zoquero at gmail dot com
 
   [Examples]
      # php getvsefwrules.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --fromip 1.2.3.4 --fromport 8080 --proto T --toip 192.168.100.10 --toport 80 -o MyOrg -d MyVdcName -e MyVShieldName
+```
+
+## graphcloud.php
+**Generates a GraphViz diagram** representing your vCloud Infraestructure.
+
+(still working on it)
+
+### Usage
+```
+  [Description]
+     Generates a GraphViz diagram representing your vCloud Infraestructure.
+
+  [Usage]
+     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --dir <dir>
+     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <dir>
+
+     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director.
+     -u|--user <username>             [req] User name in the form user@organization
+                                           for the vCloud Director.
+     -p|--pswd <password>             [req] Password for user.
+     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5.
+     -o|--dir <directory>             [req] Folder where CSVs will be craeted.
+
+  [Options]
+     -e|--certpath <certificatepath>  [opt] Local certificate's full path.
+
+  You can set the security parameters like server, user and pswd in 'config.php' file
+
+  [Examples]
+     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --dir /tmp/vc
 ```
 
 ## config.php

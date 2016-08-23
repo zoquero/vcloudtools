@@ -165,6 +165,15 @@ if ($flag==true) {
   $service = VMware_VCloud_SDK_Service::getService();
   $service->login($server, array('username'=>$user, 'password'=>$pswd), $httpConfig, $sdkversion);
 
+  # Initialization of arrays of objects:
+  $orgsArray      = array();
+  $vdcsArray      = array();
+  $vsesArray      = array();
+  $vseNetsArray   = array();
+  $vappsArray     = array();
+  $vmsArray       = array();
+  $storProfsArray = array(); # TO_DO
+
   // create sdk admin object
   $sdkAdminObj = $service->createSDKAdminObj();
 
@@ -188,7 +197,8 @@ if ($flag==true) {
     $adminOrgObj = $service->createSDKObj($adminOrgRef->get_href());
 
     $org=org2obj($sdkOrg->getOrg());
-print "DEBUG: " . $org . "\n";
+    array_push($orgsArray, $org);
+# print "DEBUG: " . $org . "\n";
 
     $vdcRefs = $sdkOrg->getVdcRefs();
     if (0 == count($vdcRefs)) {
@@ -202,7 +212,8 @@ print "DEBUG: " . $org . "\n";
       echo "-* vDC: " . $sdkVdc->getVdc()->get_name() . "\n";
 
       $vdc=vdc2obj($org, $sdkVdc->getVdc());
-print "DEBUG: " . $vdc . "\n";
+      array_push($vdcsArray, $vdc);
+# print "DEBUG: " . $vdc . "\n";
 
       // create admin vdc object
       $adminVdcRefs = $adminOrgObj->getAdminVdcRefs($sdkVdc->getVdc()->get_name());
@@ -221,14 +232,15 @@ print "DEBUG: " . $vdc . "\n";
         echo "--* vSE: " . $edgeGatewayRef->get_name() . "\n";
         $edgeGatewayObj = $service->createSDKObj($edgeGatewayRef->get_href());
         $vse=vse2obj($org, $vdc, $edgeGatewayObj);
-print "DEBUG: " . $vse . "\n";
+        array_push($vsesArray, $vse);
+# print "DEBUG: " . $vse . "\n";
 
         $__vse   = $edgeGatewayObj->getEdgeGateway();
         $vseConf = $__vse->getConfiguration();
         foreach($vseConf->getGatewayInterfaces()->getGatewayInterface() as $iface) {
           $vseNet=vseNetwork2obj($org, $vdc, $vse, $iface);
-print "DEBUG: " . $vseNet . "\n";
-#exit(1);
+          array_push($vseNetsArray, $vseNet);
+# print "DEBUG: " . $vseNet . "\n";
         }
       }
 
@@ -239,96 +251,21 @@ print "DEBUG: " . $vseNet . "\n";
         $aType=preg_replace('/\+xml$/', '', $aType);
         if($aType === "vApp") {
           $aSdkVApp = $service->createSDKObj($aRE->get_href());
-
           $vApp=vApp2obj($vdc, $aSdkVApp);
-print "DEBUG: a vApp: " . $vApp . "\n";
+          array_push($vappsArray, $vApp);
+# print "DEBUG: a vApp: " . $vApp . "\n";
 
           foreach ($aSdkVApp->getVapp()->getChildren()->getVM() as $aVM) {
-            # Empirically:
-            # * status=3 == Suspended
-            # * status=4 == PoweredOn
-            # * status=8 == PoweredOff
-print "DEBUG: VM: name=" .  $aVM->get_name() . ", status=" . $aVM->get_status() . "\n";
-#           $aVM->get_name()
-#           $aVM->get_status()
-
-
-print "\nDEBUG:\n";
-showObject($aVM);
-exit(1);
-  This is an object of class VMware_VCloud_API_VmType
-  Public methods:
-   * __construct
-   * getVAppScopedLocalId
-   * setVAppScopedLocalId
-   * getEnvironment
-   * setEnvironment
-   * getVmCapabilities
-   * setVmCapabilities
-   * getStorageProfile
-   * setStorageProfile
-   * get_needsCustomization
-   * set_needsCustomization
-   * get_nestedHypervisorEnabled
-   * set_nestedHypervisorEnabled
-   * get_tagName
-   * set_tagName
-   * export
-   * build
-   * getVAppParent
-   * setVAppParent
-   * getSection
-   * setSection
-   * addSection
-   * getDateCreated
-   * setDateCreated
-   * get_deployed
-   * set_deployed
-   * getFiles
-   * setFiles
-   * get_status
-   * set_status
-   * getDescription
-   * setDescription
-   * getTasks
-   * setTasks
-   * get_name
-   * set_name
-   * get_operationKey
-   * set_operationKey
-   * get_id
-   * set_id
-   * getLink
-   * setLink
-   * addLink
-   * get_href
-   * set_href
-   * get_type
-   * set_type
-   * getVCloudExtension
-   * setVCloudExtension
-   * addVCloudExtension
-   * get_anyAttributes
-   * set_anyAttributes
-array(1) {
-  ["anyAttributes"]=>
-  array(0) {
-  }
-}
-
-
-
-
+            $vm=vm2obj($vdc, $aVM);
+            array_push($vmsArray, $vm);
+# print "DEBUG: a VM: " . $vm . "\n";
           }
-
-
         }
       }
-
-
     }
   }
 
+  graph($orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray);
 }
 else {
     echo "\nLogin Failed due to certification mismatch.";
@@ -341,11 +278,11 @@ exit(0);
 function usage() {
     echo "Usage:\n\n";
     echo "  [Description]\n";
-    echo "     Dumps to CSV or XML all the entities (vApps, VMs,  vShields, vDCs and organizations) that you have access to.\n";
+    echo "     Generates a GraphViz diagram representing your vCloud Infraestructure.\n";
     echo "\n";
     echo "  [Usage]\n";
-    echo "     # php vc2csv.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --dir <dir> --format <format>\n";
-    echo "     # php vc2csv.php -s <server> -u <username> -p <password> -v <sdkversion> -o <dir> -f <format>\n";
+    echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --dir <dir>\n";
+    echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <dir>\n";
     echo "\n";
     echo "     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director.\n";
     echo "     -u|--user <username>             [req] User name in the form user@organization\n";
@@ -353,7 +290,6 @@ function usage() {
     echo "     -p|--pswd <password>             [req] Password for user.\n";
     echo "     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5.\n";
     echo "     -o|--dir <directory>             [req] Folder where CSVs will be craeted.\n";
-    echo "     -f|--format (csv|xml)            [req] Format for output.\n";
     echo "\n";
     echo "  [Options]\n";
     echo "     -e|--certpath <certificatepath>  [opt] Local certificate's full path.\n";
@@ -361,7 +297,7 @@ function usage() {
     echo "  You can set the security parameters like server, user and pswd in 'config.php' file\n";
     echo "\n";
     echo "  [Examples]\n";
-    echo "     # php exportvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --dir /tmp/vc --format xml\n\n";
+    echo "     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --dir /tmp/vc\n\n";
 
 }
 
@@ -1030,6 +966,87 @@ function vApp2obj(&$vdc, &$sdkVApp) {
   return new vApp($sdkVApp->getVapp()->get_name(), $sdkVApp->getVapp()->get_id(), $sdkVApp->getStatus(), $networks, $vdc);
 }
 
+/**
+ * Returns a new VM object
+ *
+ * @return a new VM object representing that VM
+ * @param $vdc The Virtual DataCenter object from this lib, passed by reference
+ * @param $aVM The VM taken from the SDK, passed by reference
+ */
+function vm2obj(&$vdc, &$sdkVM) {
 
+  # Empirically:
+  # * status=3 == Suspended
+  # * status=4 == PoweredOn
+  # * status=8 == PoweredOff
+#           $sdkVM->get_name()
+#           $sdkVM->get_status()
+
+
+  ## TO_DO : VM Storage Profiles
+  ## $sdkVM->getStorageProfile()
+  
+  $vmNetworks = array();
+  foreach ($sdkVM->getSection() as $aSection) {
+    if(get_class($aSection) == "VMware_VCloud_API_NetworkConnectionSectionType") {
+     foreach($aSection->getNetworkConnection() as $aNetConn) {
+       # $aNetConn :: VMware_VCloud_API_NetworkConnectionType
+       array_push($vmNetworks, $aNetConn->get_network());
+     }
+    }
+  
+  }
+# print "DEBUG: VM: name=" .  $sdkVM->get_name() . ", status=" . $sdkVM->get_status() . " i amb xarxes:\n";
+# print var_dump($vmNetworks);
+
+  return new VM($sdkVM->get_name(), $sdkVM->get_id(), $sdkVM->get_status(), $vmNetworks, $vdc);
+}
+
+/**
+ * Generates a GraphViz diagram
+ *
+ * @param $vdc The Virtual DataCenter object from this lib, passed by reference
+ * @param $aVM The VM taken from the SDK, passed by reference
+
+ * @param $orgs Array of organizations
+ * @param $vdcs Array of Virtual Datacenters
+ * @param $vses Array of vShield Edges
+ * @param $vseNets Array of Networks
+ * @param $vapps Array of vApps
+ * @param $vms Array of VMs
+ * @param $storProf Array of Storage Profiles
+
+ */
+function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
+  print "Orgs:\n";
+  print "========\n";
+  var_dump($orgs);
+
+  print "vDCs:\n";
+  print "========\n";
+  var_dump($vdcs);
+
+  print "vSEs:\n";
+  print "========\n";
+  var_dump($vses);
+
+  print "vseNets:\n";
+  print "========\n";
+  var_dump($vseNets);
+
+  print "vApps:\n";
+  print "========\n";
+  var_dump($vapps);
+
+  print "VMs:\n";
+  print "========\n";
+  var_dump($vms);
+
+  print "Storge Profiles: (PENDING, TO_DO)\n";
+  print "========\n";
+  var_dump($storProfs);
+
+  print "\nStill working on nit... next step is to generate the GraphViz diagram\n";
+}
 
 ?>

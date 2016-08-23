@@ -112,8 +112,6 @@ $___org=$_vdc->org;
   }
 }
 
-
-
 /**
  * A vApp
  */
@@ -139,6 +137,34 @@ class Vapp {
     $vdc = $this->vdc;
     $networksStr = "[" . join (", ", $this->networks) . "]";
     return "vApp with name='" . $this->name . "', id='" . $this->id . "', status='" . $this->status . "', connected to networks='" . $networksStr . "' from org '" . $org->name . "' and vdc '" . $vdc->name . "'";
+  }
+}
+
+/**
+ * A VM
+ */
+class VM {
+  public $name     = '';
+  public $id       = '';
+  public $status   = '';
+  public $networks = array( /* String */ );
+  public $org      = null;
+  public $vdc      = null;
+
+  public function __construct($_name, $_id, $_status, $_networks, /* &$_org, */ &$_vdc) {
+    $this->name = $_name;
+    $this->id = $_id;
+    $this->status = $_status;
+    $this->networks = $_networks;
+    $this->vdc  = $_vdc;
+    $this->org  = $_vdc->org;
+  }
+
+  public function __toString() {
+    $org = $this->org;
+    $vdc = $this->vdc;
+    $networksStr = "[" . join (", ", $this->networks) . "]";
+    return "VM with name='" . $this->name . "', id='" . $this->id . "', status='" . $this->status . "', connected to networks='" . $networksStr . "' from org '" . $org->name . "' and vdc '" . $vdc->name . "'";
   }
 }
 
