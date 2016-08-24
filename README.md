@@ -76,8 +76,6 @@ zoquero at gmail dot com
 ## graphcloud.php
 **Generates a GraphViz diagram** representing your vCloud Infraestructure.
 
-(still working on it)
-
 ### Usage
 ```
   [Description]
