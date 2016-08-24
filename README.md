@@ -8,6 +8,8 @@ These tools give you a **better visibility and manageability of your vCloud Infr
 * to look for vShield Edge firewall rules when **troubleshooting communications** on your vDCs
 * to **dump your infraestructure to CSV or XML** (it can help you to backup your configuration, to plug your cloud to your CMDB (manual integration, if your CMDB doesn't support vCloud API), to account our usage, a step towards monitoring), ...
 
+![Sample of a generated diagram](https://github.com/zoquero/vcloudtools/raw/master/vcloudtools_output.sample.reducedsize.png "Sample of a generated diagram")
+
 vCloud Director web UI is the tool to manage your cloud, but these non-interactive tools really can help you in some situations.
 
 It **requires** [vCloud SDK for PHP for vCloud Suite 5.5](https://developercenter.vmware.com/web/sdk/5.5.0/vcloud-php). Don't forget to add it's folder to your **```include_path```** setting in your php.ini
