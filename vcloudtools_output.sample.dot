@@ -1,0 +1,155 @@
+#
+# Graph genated on 2016/08/24 01:32:33 pm
+# by vcloudtools:
+# https://github.com/zoquero/vcloudtools
+#
+
+digraph vCloud {
+  rankdir=BT;    # LR RL BT TB
+  splines=false; # avoid curve lines
+  edge [arrowhead=none,arrowtail=none];
+  {
+    node [style=filled, fillcolor="#C0C0C0"];
+    org -> vDC -> vSE -> network -> vApp -> VM
+
+    org     [shape=house];
+    vDC     [shape=invhouse];
+    vSE     [shape=doublecircle];
+    network [shape=parallelogram];
+    vApp    [shape=Msquare];
+    VM      [shape=box];
+  }
+  # Orgs
+  {
+    node [shape=house];
+    "Org1" [label="Main org"]
+    "Org2" [label="Other org"]
+    rank = same; org; "Org1";
+    rank = same; org; "Org2";
+  }
+  # vDCs
+  {
+    node [shape=invhouse];
+    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1" [label="First VDC for Org1"]
+    rank = same; vDC; "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1";
+    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_928ad3f28482" [label="First VDC for Org2"]
+    rank = same; vDC; "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_928ad3f28482";
+  }
+  # vSEs
+  {
+    node [shape=doublecircle];
+    "urn_vcloud_gateway_99a8652b_f8e5_4322_842a_83jafb882ae1" [label="Vshield_2"]
+    rank = same; vSE; "urn_vcloud_gateway_99a8652b_f8e5_4322_842a_83jafb882ae1";
+    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c" [label="Vshield_1"]
+    rank = same; vSE; "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c";
+    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05d" [label="Vshield for Org2"]
+    rank = same; vSE; "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05d";
+  }
+  # vSE Networks
+  {
+    node [shape=parallelogram];
+    "TESTNET2" [label="TESTNET2"]
+    rank = same; network; "TESTNET2";
+    "External network 1" [label="External network 1"]
+    rank = same; network; "External network 1";
+    "External network 1" [label="External network 1"]
+    rank = same; network; "External network 1";
+    "TESTNET0" [label="TESTNET0"]
+    rank = same; network; "TESTNET0";
+    "TESTNET1" [label="TESTNET1"]
+    rank = same; network; "TESTNET1";
+    "TESTNET9" [label="TESTNET9"]
+    rank = same; network; "TESTNET9";
+    "TESTNET8" [label="TESTNET8"]
+    rank = same; network; "TESTNET8";
+  }
+  # Isolated Networks
+  {
+    node [shape=parallelogram,style=filled,fillcolor="#C0C0C0"];
+    "TESTNET3" [label="TESTNET3"]
+    rank = same; network; "TESTNET3";
+  }
+  # vApps
+  {
+    node [shape=Msquare];
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076" [label="vApp_FE"]
+    rank = same; vApp; "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076";
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077" [label="vApp_BE"]
+    rank = same; vApp; "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077";
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667078" [label="vApp_Mon"]
+    rank = same; vApp; "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667078";
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667079" [label="Management"]
+    rank = same; vApp; "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667079";
+  }
+  # VMs
+  {
+    node [shape=box];
+    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a0" [label="TEST_VM_02"]
+    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a0";
+    "urn_vcloud_vm_40a34d05_bc27_455b_ba0b_576bd99e14d3" [label="TEST_VM_01"]
+    rank = same; VM; "urn_vcloud_vm_40a34d05_bc27_455b_ba0b_576bd99e14d3";
+    "urn_vcloud_vm_0ccae7ba_1585_443d_8091_3c5d02bc5ffe" [label="TEST_VM_03"]
+    rank = same; VM; "urn_vcloud_vm_0ccae7ba_1585_443d_8091_3c5d02bc5ffe";
+    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a1" [label="TEST_BE_01"]
+    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a1";
+    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a2" [label="TEST_BE_02"]
+    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a2";
+    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a3" [label="TEST_MON_01"]
+    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a3";
+    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a4" [label="TEST_MON_02"]
+    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a4";
+    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a5" [label="Conf Manager"]
+    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a5";
+    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a6" [label="Accounting"]
+    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a6";
+  }
+  #
+  # Edges
+  #
+
+  # Org edges:
+  # vDC edges:
+    "Org1":n->"urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1":s;
+    "Org2":n->"urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_928ad3f28482":s;
+  # vSE edges:
+    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1":n->"urn_vcloud_gateway_99a8652b_f8e5_4322_842a_83jafb882ae1":s;
+    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1":n->"urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c":s;
+    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_928ad3f28482":n->"urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05d":s;
+  # vSE Network edges:
+    "urn_vcloud_gateway_99a8652b_f8e5_4322_842a_83jafb882ae1":n->"TESTNET2":s;
+    "urn_vcloud_gateway_99a8652b_f8e5_4322_842a_83jafb882ae1":n->"External network 1":s;
+    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c":n->"External network 1":s;
+    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c":n->"TESTNET0":s;
+    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c":n->"TESTNET1":s;
+    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05d":n->"TESTNET9":s;
+    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05d":n->"TESTNET8":s;
+  # Isolated Network edges:
+    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1":n->"TESTNET3":s [style="dotted"];
+  # vApp edges:
+    "TESTNET1":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":s;
+    "TESTNET3":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":s;
+    "TESTNET0":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":s;
+    "TESTNET1":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077":s;
+    "TESTNET2":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077":s;
+    "TESTNET9":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667078":s;
+    "TESTNET8":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667079":s;
+  # VM edges:
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a0":s;
+    "TESTNET0":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a0":s;
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":n->"urn_vcloud_vm_40a34d05_bc27_455b_ba0b_576bd99e14d3":s;
+    "TESTNET0":n->"urn_vcloud_vm_40a34d05_bc27_455b_ba0b_576bd99e14d3":s;
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":n->"urn_vcloud_vm_0ccae7ba_1585_443d_8091_3c5d02bc5ffe":s;
+    "TESTNET0":n->"urn_vcloud_vm_0ccae7ba_1585_443d_8091_3c5d02bc5ffe":s;
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a1":s;
+    "TESTNET0":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a1":s;
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a2":s;
+    "TESTNET0":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a2":s;
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667078":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a3":s;
+    "TESTNET9":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a3":s;
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667078":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a4":s;
+    "TESTNET9":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a4":s;
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667079":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a5":s;
+    "TESTNET9":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a5":s;
+    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667079":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a6":s;
+    "TESTNET8":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a6":s;
+}
