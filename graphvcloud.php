@@ -24,6 +24,15 @@
  * <p>
  * Tested on Ubuntu 15.04 64b with PHP 5.6.4
  *
+ * <p>
+ *   TO_DO:
+ *   <ul>
+ *     <li> To be able to graph just a subset of your infraestructure
+ *            (just one organization, vDC, vShield Edge, vApp or VM
+ *             and all of it's objects downwards).
+ *     <li> Add Storage Profiles
+ *   </ul>
+ *
  * @author Angel Galindo Muñoz (zoquero at gmail dot com)
  * @version 1.0
  * @since 20/08/2016
@@ -55,7 +64,11 @@ $longs  = array(
 $opts = getopt($shorts, $longs);
 
 // minimum conf
-$colSep  = ";";
+$doPrintVappNetLinks  = true;
+$doPrintVmNetLinks    = true;
+$doPrintVdc2VappLinks = false;
+$doPrintVdc2VmLinks   = false;
+$rankDir="BT";                 # LR RL BT TB"
 
 // Initialize parameters
 # $httpConfig = array('ssl_verify_peer'=>false, 'ssl_verify_host'=>false); ## From config.php
@@ -108,13 +121,13 @@ foreach (array_keys($opts) as $opt) switch ($opt) {
 
 // parameters validation
 if (!isset($server) || !isset($user) || !isset($pswd) || !isset($sdkversion) || !isset($oFile)) {
-    echo "Error: missing required parameters\n";
+    echo "Error: missing required parameters" . PHP_EOL;
     usage();
     exit(1);
 }
 
 if (file_exists($oFile)) {
-  echo "Error: $oFile already exists\n";
+  echo "Error: $oFile already exists" . PHP_EOL;
   usage();
   exit(1);
 }
@@ -147,18 +160,18 @@ if (isset($certPath)) {
 
     // compare two certificate as string
     if (strcmp($encodeddata1, $encodeddata2)==0) {
-        echo "\n\nValidation of certificates is successful.\n\n";
+        echo PHP_EOL . "Validation of certificates is successful." . PHP_EOL;
         $flag=true;
     }
     else {
-        echo "\n\nCertification Failed.\n";
+        echo PHP_EOL . "Certification Failed." . PHP_EOL;
         $flag=false;
     }
 }
 
 if ($flag==true) {
   if (!isset($certPath)) {
-      echo "Ignoring the Certificate Validation --Fake certificate - DO NOT DO THIS IN PRODUCTION.\n\n";
+      echo "Ignoring the Certificate Validation --Fake certificate - DO NOT DO THIS IN PRODUCTION." . PHP_EOL;
   }
   // vCloud login
   $service = VMware_VCloud_SDK_Service::getService();
@@ -179,13 +192,13 @@ if ($flag==true) {
   // create an SDK Org object
   $orgRefs = $service->getOrgRefs();
   if (0 == count($orgRefs)) {
-      exit("No organizations found\n");
+      exit("No organizations found" . PHP_EOL);
   }
-  # echo "Found " . count($orgRefs) . " organizations:\n";
+  # echo "Found " . count($orgRefs) . " organizations:" . PHP_EOL;
   foreach ($orgRefs as $orgRef) {
     ## Iterate through organizations ##
     $sdkOrg = $service->createSDKObj($orgRef);
-    echo "* org: " . $sdkOrg->getOrg()->get_name() . "\n";
+    echo "* org: " . $sdkOrg->getOrg()->get_name() . "" . PHP_EOL;
 
     // create admin org object
     $adminOrgRefs = $sdkAdminObj->getAdminOrgRefs($sdkOrg->getOrg()->get_name());
@@ -197,22 +210,20 @@ if ($flag==true) {
 
     $org=org2obj($sdkOrg->getOrg());
     array_push($orgsArray, $org);
-# print "DEBUG: " . $org . "\n";
 
     $vdcRefs = $sdkOrg->getVdcRefs();
     if (0 == count($vdcRefs)) {
-        exit("No vDCs found\n");
+        exit("No vDCs found" . PHP_EOL);
     }
 
-    # echo "Found " . count($vdcRefs) . " vDCs:\n";
+    # echo "Found " . count($vdcRefs) . " vDCs:" . PHP_EOL;
     foreach ($vdcRefs as $vdcRef) {
       ## Iterate through vDCs ##
       $sdkVdc = $service->createSDKObj($vdcRef);
-      echo "-* vDC: " . $sdkVdc->getVdc()->get_name() . "\n";
+      echo "-* vDC: " . $sdkVdc->getVdc()->get_name() . "" . PHP_EOL;
 
       $vdc=vdc2obj($org, $sdkVdc->getVdc());
       array_push($vdcsArray, $vdc);
-# print "DEBUG: " . $vdc . "\n";
 
       // create admin vdc object
       $adminVdcRefs = $adminOrgObj->getAdminVdcRefs($sdkVdc->getVdc()->get_name());
@@ -224,22 +235,21 @@ if ($flag==true) {
 
       $edgeGatewayRefs = $adminVdcObj->getEdgeGatewayRefs();
       if (0 == count($edgeGatewayRefs)) {
-        echo "No vShield Edges found in this vDC\n";
+        echo "No vShield Edges found in this vDC" . PHP_EOL;
         continue;
       }
       foreach ($edgeGatewayRefs as $edgeGatewayRef) {
-        echo "--* vSE: " . $edgeGatewayRef->get_name() . "\n";
+        echo "--* vSE: " . $edgeGatewayRef->get_name() . "" . PHP_EOL;
         $edgeGatewayObj = $service->createSDKObj($edgeGatewayRef->get_href());
         $vse=vse2obj($org, $vdc, $edgeGatewayObj);
         array_push($vsesArray, $vse);
-# print "DEBUG: " . $vse . "\n";
 
         $__vse   = $edgeGatewayObj->getEdgeGateway();
         $vseConf = $__vse->getConfiguration();
         foreach($vseConf->getGatewayInterfaces()->getGatewayInterface() as $iface) {
           $vseNet=vseNetwork2obj($org, $vdc, $vse, $iface);
           array_push($vseNetsArray, $vseNet);
-# print "DEBUG: " . $vseNet . "\n";
+          echo "---* vSE network: " . $vseNet->name . "" . PHP_EOL;
         }
       }
 
@@ -252,12 +262,12 @@ if ($flag==true) {
           $aSdkVApp = $service->createSDKObj($aRE->get_href());
           $vApp=vApp2obj($vdc, $aSdkVApp);
           array_push($vappsArray, $vApp);
-# print "DEBUG: a vApp: " . $vApp . "\n";
+          echo "---* vApp : " . $vApp->name . "" . PHP_EOL;
 
           foreach ($aSdkVApp->getVapp()->getChildren()->getVM() as $aVM) {
             $vm=vm2obj($vApp, $aVM);
             array_push($vmsArray, $vm);
-# print "DEBUG: a VM: " . $vm . "\n";
+            echo "---* VM : " . $vm->name . "" . PHP_EOL;
           }
         }
       }
@@ -265,9 +275,16 @@ if ($flag==true) {
   }
 
   graph($orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray);
+  echo PHP_EOL;
+  echo "Graph '$oFile' Generated successfully." . PHP_EOL;
+  echo "Now you can render it with graphviz ( http://www.graphviz.org/ ) this way:" . PHP_EOL;
+  echo "as a PNG:" . PHP_EOL;
+  echo "# dot -Tpng '$oFile' -o ./vcloud.png" . PHP_EOL;
+  echo "as a SVG:" . PHP_EOL;
+  echo "# dot -Tsvg '$oFile' -o ./vcloud.svg" . PHP_EOL;
 }
 else {
-    echo "\nLogin Failed due to certification mismatch.";
+    echo PHP_EOL . "Login Failed due to certification mismatch.";
     exit(1);
 }
 exit(0);
@@ -275,28 +292,28 @@ exit(0);
 
 
 function usage() {
-    echo "Usage:\n\n";
-    echo "  [Description]\n";
-    echo "     Generates a GraphViz diagram representing your vCloud Infraestructure.\n";
-    echo "\n";
-    echo "  [Usage]\n";
-    echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file>\n";
-    echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file>\n";
-    echo "\n";
-    echo "     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director.\n";
-    echo "     -u|--user <username>             [req] User name in the form user@organization\n";
-    echo "                                           for the vCloud Director.\n";
-    echo "     -p|--pswd <password>             [req] Password for user.\n";
-    echo "     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5.\n";
-    echo "     -o|--output <file>               [req] Folder where CSVs will be craeted.\n";
-    echo "\n";
-    echo "  [Options]\n";
-    echo "     -e|--certpath <certificatepath>  [opt] Local certificate's full path.\n";
-    echo "\n";
-    echo "  You can set the security parameters like server, user and pswd in 'config.php' file\n";
-    echo "\n";
-    echo "  [Examples]\n";
-    echo "     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --output /tmp/vc.dot\n\n";
+    echo "Usage:" . PHP_EOL;
+    echo "  [Description]" . PHP_EOL;
+    echo "     Generates a GraphViz diagram representing your vCloud Infraestructure." . PHP_EOL;
+    echo PHP_EOL;
+    echo "  [Usage]" . PHP_EOL;
+    echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file>" . PHP_EOL;
+    echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file>" . PHP_EOL;
+    echo PHP_EOL;
+    echo "     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director." . PHP_EOL;
+    echo "     -u|--user <username>             [req] User name in the form user@organization" . PHP_EOL;
+    echo "                                           for the vCloud Director." . PHP_EOL;
+    echo "     -p|--pswd <password>             [req] Password for user." . PHP_EOL;
+    echo "     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5." . PHP_EOL;
+    echo "     -o|--output <file>               [req] Folder where CSVs will be craeted." . PHP_EOL;
+    echo PHP_EOL;
+    echo "  [Options]" . PHP_EOL;
+    echo "     -e|--certpath <certificatepath>  [opt] Local certificate's full path." . PHP_EOL;
+    echo PHP_EOL;
+    echo "  You can set the security parameters like server, user and pswd in 'config.php' file" . PHP_EOL;
+    echo PHP_EOL;
+    echo "  [Examples]" . PHP_EOL;
+    echo "     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --output /tmp/vc.dot" . PHP_EOL;
 
 }
 
@@ -307,574 +324,25 @@ function usage() {
  */
 function showObject($o) {
   if(is_null($o)) {
-    echo "  Is a NULL object\n";
+    echo "  Is a NULL object" . PHP_EOL;
     return;
   }
   else if(is_array($o)) {
-    echo "  It's not an object, it's an array\n";
+    echo "  It's not an object, it's an array" . PHP_EOL;
     return;
   }
   else {
-    echo "  This is an object of class " . get_class($o) . "\n";
+    echo "  This is an object of class " . get_class($o) . "" . PHP_EOL;
   }
-  echo "  Public methods:\n";
+  echo "  Public methods:" . PHP_EOL;
   $egMethods=get_class_methods($o);
   foreach ($egMethods as $aMethod) {
-    echo "   * $aMethod\n";
+    echo "   * $aMethod" . PHP_EOL;
   }
 
   var_dump(get_object_vars($o));
 }
 
-
-/**
- * Just for debugging, outputs a Firewall
- *
- * @param The Firewall rule
- */
-function showFirewallRule($r) {
-  print "Firewall rule: \n";
-  print "  getId : " . $r->getId() . "\n";
-  print "  getIsEnabled : " . $r->getIsEnabled() . "\n";
-  print "  getMatchOnTranslate : " . $r->getMatchOnTranslate() . "\n";
-  print "  getDescription : " . $r->getDescription() . "\n";
-  print "  getPolicy : " . $r->getPolicy() . "\n";
-# print "  getProtocols : " . $r->getProtocols() . "\n";
-  print "  getProtocols : \n";
-#   showObject($r->getProtocols());
-  print "               : tcp   :" . $r->getProtocols()->getTcp() . "\n";
-  print "               : udp   :" . $r->getProtocols()->getUdp() . "\n";
-  print "               : icmp  :" . $r->getProtocols()->getIcmp() . "\n";
-  print "               : any   :" . $r->getProtocols()->getAny() . "\n";
-  print "               : other :" . $r->getProtocols()->getOther() . "\n";
-  print "  getIcmpSubType : " . $r->getIcmpSubType() . "\n";
-  print "  getPort : " . $r->getPort() . "\n";
-  print "  getDestinationPortRange : " . $r->getDestinationPortRange() . "\n";
-  print "  getDestinationIp : " . $r->getDestinationIp() . "\n";
-  print "  getDestinationVm : " . $r->getDestinationVm() . "\n";
-  print "  getSourcePort : " . $r->getSourcePort () . "\n";
-  print "  getSourcePortRange : " . $r->getSourcePortRange () . "\n";
-  print "  getSourceIp : " . $r->getSourceIp () . "\n";
-  print "  getSourceVm : " . $r->getSourceVm () . "\n";
-  print "  getDirection : " . $r->getDirection () . "\n";
-  print "  getEnableLogging : " . $r->getEnableLogging () . "\n";
-  print "  get_tagName : " . $r->get_tagName () . "\n";
-## Són Arrays, els del meu exemple estan buits i no sé quina mena d'objectes poden contenir
-# print "  getVCloudExtension : " . $r->getVCloudExtension () . "\n";
-# print "  get_anyAttributes : " . $r->get_anyAttributes () . "\n";
-}
-
-
-/**
- * Returns the headers for the CSV that should contain firewall rules
- *
- * @return The string with the line to dump
- */
-function firewallRuleCsvHeader() {
-  global $colSep;
-
-  return "FwDefaultAction" . $colSep .
-         "FwLogDefaultAction" . $colSep .
-         "FwIsEnabled" . $colSep .
-         "Id" . $colSep .
-         "IsEnabled" . $colSep .
-         "MatchOnTranslate" . $colSep .
-         "Description" . $colSep .
-         "Policy" . $colSep .
-         "Protocols" . $colSep .
-         "IcmpSubType" . $colSep .
-
-         "SourceIp" . $colSep . 
-         "SourcePort" . $colSep . 
-         "SourcePortRange" . $colSep . 
-         "SourceVm" . $colSep . 
-         
-         "DestinationIp" . $colSep . 
-         "Port" . $colSep . 
-         "DestinationPortRange" . $colSep . 
-         "DestinationVm" . $colSep . 
-         
-         "Direction" . $colSep . 
-         "EnableLogging";
-}
-
-/**
- * Returns the CSV row representing a firewall rule
- *
- * @param The Firewall rule
- * @return The string with the line to dump
- */
-function firewallRule2CsvRow($r) {
-  global $colSep;
-  $ret = $r->getId() . $colSep;
-  $ret .= $r->getIsEnabled() . $colSep;
-  $ret .= $r->getMatchOnTranslate() . $colSep;
-  $ret .= $r->getDescription() . $colSep;
-  $ret .= $r->getPolicy() . $colSep;
-  
-  if($r->getProtocols()->getTcp() == 1) {
-    $ret .= "T";
-  }
-  if($r->getProtocols()->getUdp() == 1) {
-    $ret .= "U";
-  }
-  if($r->getProtocols()->getIcmp() == 1) {
-    $ret .= "I";
-  }
-  if($r->getProtocols()->getAny() == 1) {
-    $ret .= "A";
-  }
-  if($r->getProtocols()->getOther() == 1) {
-    $ret .= "O";
-  }
-  $ret .= $colSep;
-  
-  $ret .= $r->getIcmpSubType() . $colSep;
-
-  $ret .= $r->getSourceIp() . $colSep;
-  $ret .= $r->getSourcePort() . $colSep;
-  $ret .= $r->getSourcePortRange() . $colSep;
-  $ret .= $r->getSourceVm() . $colSep;
-
-  $ret .= $r->getDestinationIp() . $colSep;
-  $ret .= $r->getPort() . $colSep;
-  $ret .= $r->getDestinationPortRange() . $colSep;
-  $ret .= $r->getDestinationVm() . $colSep;
-
-  $ret .= $r->getDirection() . $colSep;
-  $ret .= $r->getEnableLogging() . $colSep;
-  return $ret;
-}
-
-function natRule2CsvRow($r) {
-  global $colSep;
-# showObject($r);
-
-# Description can have new lines
-# $ret  = $r->getDescription() . $colSep;
-  $ret  = trim(preg_replace('/\s+/', ' ', $r->getDescription())) . $colSep;
-  $ret .= $r->getRuleType() . $colSep;
-  $ret .= $r->getIsEnabled() . $colSep;
-  $ret .= $r->getId() . $colSep;
-
-  $ret .= $r->getOneToOneBasicRule() . $colSep;
-  $ret .= $r->getOneToOneVmRule() . $colSep;
-  $ret .= $r->getPortForwardingRule() . $colSep;
-  $ret .= $r->getVmRule() . $colSep;
-  $ret .= $r->get_tagName() . $colSep;
-# $ret .= $r->getVCloudExtension() . $colSep;
-# $ret .= $r->get_anyAttributes() . $colSep;
-
-  $gr=$r->getGatewayNatRule();
-# showObject($gr->getInterface());
-  $ret .= $gr->getInterface()->get_name() . $colSep;
-  $ret .= $gr->getOriginalIp() . $colSep;
-  $ret .= $gr->getOriginalPort() . $colSep;
-  $ret .= $gr->getTranslatedIp() . $colSep;
-  $ret .= $gr->getTranslatedPort() . $colSep;
-  $ret .= $gr->getProtocol() . $colSep;
-  $ret .= $gr->getIcmpSubType() . $colSep;
-  $ret .= $gr->get_tagName();
-# $ret .= $gr->getVCloudExtension() . $colSep;
-# $ret .= $gr->get_anyAttributes() . $colSep;
-
-  return $ret;
-}
-
-function natRuleCsvHeader() {
-  global $colSep;
-
-  $ret  = "SvcNatType" . $colSep;
-  $ret .= "SvcPolicy" . $colSep;
-  $ret .= "SvcExternalIp" . $colSep;
-  $ret .= "SvcTagName" . $colSep;
-  $ret .= "SvcIsEnabled" . $colSep;
-  $ret .= "Description" . $colSep;
-  $ret .= "RuleType" . $colSep;
-  $ret .= "IsEnabled" . $colSep;
-  $ret .= "Id" . $colSep;
-  $ret .= "OneToOneBasicRule" . $colSep;
-  $ret .= "OneToOneVmRule" . $colSep;
-  $ret .= "PortForwardingRule" . $colSep;
-  $ret .= "VmRule" . $colSep;
-  $ret .= "tagName" . $colSep;
-  $ret .= "Interface" . $colSep;
-  $ret .= "OriginalIp" . $colSep;
-  $ret .= "OriginalPort" . $colSep;
-  $ret .= "TranslatedIp" . $colSep;
-  $ret .= "TranslatedPort" . $colSep;
-  $ret .= "Protocol" . $colSep;
-  $ret .= "IcmpSubType" . $colSep;
-  $ret .= "tagName2";
-  return $ret;
-}
-
-function vDC2CsvRow($r, $orgName, $service) {
-  global $colSep;
-  global $vApFp;
-  $ret  = $r->getAllocationModel() . $colSep;
-#
-# $ret .= $r->getStorageCapacity() . $colSep; ## TO_DO 
-# TO_DO: on function vDC2CsvRow: get storage capacity usage: $sdkVdc->getStorageCapacity() should return an object of class VMware_VCloud_API_CapacityWithUsageType but now gets a null object.
-  $ret .= $r->getComputeCapacity()->getCpu()->getReserved() . $colSep;
-  $ret .= $r->getComputeCapacity()->getCpu()->getUsed() . $colSep;
-  $ret .= $r->getComputeCapacity()->getCpu()->getOverhead() . $colSep;
-  $ret .= $r->getComputeCapacity()->getCpu()->getUnits() . $colSep;
-  $ret .= $r->getComputeCapacity()->getCpu()->getAllocated() . $colSep;
-  $ret .= $r->getComputeCapacity()->getCpu()->getLimit() . $colSep;
-
-  $ret .= $r->getComputeCapacity()->getMemory()->getReserved() . $colSep;
-  $ret .= $r->getComputeCapacity()->getMemory()->getUsed() . $colSep;
-  $ret .= $r->getComputeCapacity()->getMemory()->getOverhead() . $colSep;
-  $ret .= $r->getComputeCapacity()->getMemory()->getUnits() . $colSep;
-  $ret .= $r->getComputeCapacity()->getMemory()->getAllocated() . $colSep;
-  $ret .= $r->getComputeCapacity()->getMemory()->getLimit() . $colSep;
-
-  $aREArray=array();
-  foreach ($r->getResourceEntities()->getResourceEntity() as $aRE) {
-    $aType=preg_replace('/^application\/vnd\.vmware\.vcloud\./', '', $aRE->get_type());
-    $aType=preg_replace('/\+xml$/', '', $aType);
-    if($aType === "vApp") {
-      $aVApp = $service->createSDKObj($aRE->get_href());
-      fwrite($vApFp, $orgName . $colSep . $r->get_name() . $colSep . vApp2CsvRow($aVApp, $orgName, $r->get_name()) . "\n");
-    }
-    array_push($aREArray, "[" . $aType . ": " . $aRE->get_name() . "]");
-  }
-  $aResArrayStr="[" . join(", ", $aREArray) . "]";
-  $ret .= $aResArrayStr . $colSep;
-
-  $networks=array();
-  foreach ($r->getAvailableNetworks()->getNetwork() as $aNetwork) {
-    array_push($networks, $aNetwork->get_name());
-  }
-  $ret .= "[" . join(", ", $networks) . "]" . $colSep;
-
-  $ret .= "[" . join(", ", $r->getCapabilities()->getSupportedHardwareVersions()->getSupportedHardwareVersion()) . "]" . $colSep;
-
-  $ret .= $r->getNicQuota() . $colSep;
-  $ret .= $r->getNetworkQuota() . $colSep;
-  $ret .= $r->getUsedNetworkCount() . $colSep;
-  $ret .= $r->getVmQuota() . $colSep;
-  $ret .= $r->getIsEnabled() . $colSep;
-
-  $storProfs=array();
-  foreach ($r->getVdcStorageProfiles()->getVdcStorageProfile() as $aSP) {
-    array_push($storProfs, $aSP->get_name());
-  }
-  $ret .= "[" . join (", ", $storProfs) . "]" . $colSep;
-
-  $ret .= $r->get_status() . $colSep;
-  $ret .= $r->getDescription() . $colSep;
-  ## Let's omit the tasks, an array of VMware_VCloud_API_TaskType objects
-  # $ret .= $r->getTasks() . $colSep;
-  $ret .= $r->get_name() . $colSep;
-  $ret .= $r->get_operationKey() . $colSep;
-  $ret .= $r->get_id() . $colSep;
-  return $ret;
-}
-
-function vDCCsvHeader() {
-  global $colSep;
-  $ret  = "AllocationModel". $colSep;
-# $ret .= "StorageCapacity". $colSep; ## Bug pending
-  $ret .= "CpuReserved". $colSep;
-  $ret .= "CpuUsed". $colSep;
-  $ret .= "CpuOverhead". $colSep;
-  $ret .= "CpuUnits". $colSep;
-  $ret .= "CpuAllocated". $colSep;
-  $ret .= "CpuLimit". $colSep;
-  $ret .= "MemReserved". $colSep;
-  $ret .= "MemUsed". $colSep;
-  $ret .= "MemOverhead". $colSep;
-  $ret .= "MemUnits". $colSep;
-  $ret .= "MemAllocated". $colSep;
-  $ret .= "MemLimit". $colSep;
-  $ret .= "ResourceEntities". $colSep;
-  $ret .= "Networks". $colSep;
-  $ret .= "SupportedHardwareVersions". $colSep;
-  $ret .= "NicQuota". $colSep;
-  $ret .= "NetworkQuota". $colSep;
-  $ret .= "UsedNetworkCount". $colSep;
-  $ret .= "VmQuota". $colSep;
-  $ret .= "IsEnabled". $colSep;
-  $ret .= "StorageProfiles". $colSep;
-  $ret .= "Status". $colSep;
-  $ret .= "Description". $colSep;
-## Let's omit the tasks, an array of VMware_VCloud_API_TaskType objects
-# $ret .= "Tasks". $colSep;
-  $ret .= "Name". $colSep;
-  $ret .= "OperationKey". $colSep;
-  $ret .= "Id". $colSep;
-  return $ret;
-}
-
-function vSE2CsvRow($vSEObj) {
-  global $colSep;
-  $ret = "";
-  $vSE                = $vSEObj->getEdgeGateway();
-  $vSEConf            = $vSE->getConfiguration();
-
-# print "vSEObj:\n";
-  $ret .= $vSEObj->getEntityId() . $colSep;
-
-# print "vSE:\n";
-  $ret .= $vSE->get_status() . $colSep;
-  $ret .= $vSE->getDescription() . $colSep;
-## Let's omit the tasks, an array of VMware_VCloud_API_TaskType objects
-# $ret .= "task=". $vSE->getTasks() . $colSep;
-  $ret .= $vSE->get_name() . $colSep;
-  $ret .= $vSE->get_operationKey() . $colSep;
-  $ret .= $vSE->get_id() . $colSep;
-
-# print "vSEConf:\n";
-  $ret .= $vSEConf->getBackwardCompatibilityMode() . $colSep;
-  $ret .= $vSEConf->getGatewayBackingConfig() . $colSep;
-  $ifaces = array();
-
-  # TO_DO: Dump gateway interfaces to it's own CSV file.
-  foreach($vSEConf->getGatewayInterfaces()->getGatewayInterface() as $iface) {
-    $t  = "name=" . $iface->getName() . ", ";
-    $t .= "disp=" . $iface->getDisplayName() . ", ";
-    $t .= "netw=" . $iface->getNetwork()->get_name() . ", ";
-    $t .= "iftype=" . $iface->getInterfaceType() . ", ";
-#   $t .= "snpart=" . $iface->getSubnetParticipation() . ", ";
-    $subnetPart = array();
-    foreach($iface->getSubnetParticipation() as $sp) {
-      $tt  = "gw=" . $sp->getGateway() . ", ";
-      $tt .= "mask=" . $sp->getNetmask() . ", ";
-      $tt .= "ipaddr=" . $sp->getIpAddress() . ", ";
-      $ipranges    = array();
-      $iprangesStr = "";
-      if(! is_null($sp->getIpRanges())) {
-        foreach($sp->getIpRanges()->getIpRange() as $anIpRange) {
-          array_push($ipranges, "[" . $anIpRange->getStartAddress() . "-" . $anIpRange->getEndAddress() . "]");
-        }
-        $iprangesStr="[" . join(", ", $ipranges) . "]";
-      }
-      $tt .= "iprang=$iprangesStr";
-      array_push($subnetPart, "[" . $tt . "]");
-    }
-    $subnetPartStr="[" . join(", ", $subnetPart) . "]";
-    $t .= "snpart=" . $subnetPartStr . ", ";
-    $t .= "ratlim=" . $iface->getApplyRateLimit() . ", ";
-    $t .= "inrate=" . $iface->getInRateLimit() . ", ";
-    $t .= "ourate=" . $iface->getOutRateLimit() . ", ";
-    $t .= "defrou=" . $iface->getUseForDefaultRoute();
-    array_push($ifaces, "[" . $t . "]");
-  }
-  $ifacesStr="[" . join(", ", $ifaces) . "]";
-  $ret .= $ifacesStr . $colSep;
-  $ret .= $vSEConf->getHaEnabled() . $colSep;
-  $ret .= $vSEConf->getUseDefaultRouteForDnsRelay() . $colSep;
-
-  return $ret;
-}
-
-function vSECsvHeader() {
-  global $colSep;
-  $ret  = "EntityId" . $colSep;
-  $ret .= "Status" . $colSep;
-  $ret .= "Description" . $colSep;
-  $ret .= "Name" . $colSep;
-  $ret .= "OperationKey" . $colSep;
-  $ret .= "Id" . $colSep;
-  $ret .= "BackwardCompatibilityMode" . $colSep;
-  $ret .= "GatewayBackingConfig" . $colSep;
-  $ret .= "Interfaces" . $colSep;
-  $ret .= "HaEnabled" . $colSep;
-  $ret .= "UseDefaultRouteForDnsRelay" . $colSep;
-  return $ret;
-}
-
-function vApp2CsvRow($vApp, $orgName, $vdcName) {
-  global $colSep;
-  global $vMFp;
-  $ret = "";
-  $ret .= $vApp->getVapp()->getOwner()->getUser()->get_name() . $colSep;
-  $ret .= $vApp->getVapp()->getInMaintenanceMode() . $colSep;
-  foreach ($vApp->getVapp()->getChildren()->getVM() as $aVM) {
-    fwrite($vMFp, $orgName . $colSep . $vdcName . $colSep . $vApp->getVapp()->get_name() . $colSep . vM2CsvRow($aVM) . "\n");
-  }
-  # $ret .= $vApp->getVapp()->get_ovfDescriptorUploaded() . $colSep;
-
-  $lsst="";
-  foreach($vApp->getVapp()->getSection() as $aSection) {
-    if(get_class($aSection) === "VMware_VCloud_API_LeaseSettingsSectionType") {
-      $lsst .= $aSection->getDeploymentLeaseInSeconds() . ", ";
-      $lsst .= $aSection->getStorageLeaseInSeconds() . ", ";
-      $lsst .= $aSection->getDeploymentLeaseExpiration() . ", ";
-      $lsst .= $aSection->getStorageLeaseExpiration();
-#     $lsst .= $aSection->getInfo() . $colSep; ## TO_DO class VMware_VCloud_API_OVF_Msg_Type
-    }
-    else if(get_class($aSection) === "VMware_VCloud_API_OVF_StartupSection_Type") {
-      ## TO_DO
-    }
-    else if(get_class($aSection) === "VMware_VCloud_API_OVF_NetworkSection_Type") {
-      ## TO_DO
-    }
-    else if(get_class($aSection) === "VMware_VCloud_API_NetworkConfigSectionType") {
-      ## TO_DO
-    }
-    else if(get_class($aSection) === "VMware_VCloud_API_SnapshotSectionType") {
-      ## TO_DO
-    }
-  }
-  $ret .= $lsst . $colSep;
-
-##
-##  TO_DO Storage Profile
-##  $storProfs=array();
-##  foreach ($vm->getStorageProfile() as $aSP) {
-##    foreach ($aSP as $oSP) {
-##      array_push($storProfs, $oSP->get_name() ??? );
-##    }
-##  }
-##  $ret .= join (", ", $storProfs) . $colSep;
-##
-
-  $ret .= $vApp->getVapp()->getDateCreated() . $colSep;
-  $ret .= $vApp->getVapp()->get_deployed() . $colSep;
-# $ret .= $vApp->getVapp()->getFiles() . $colSep;
-  $ret .= $vApp->getVapp()->get_status() . $colSep;
-  $ret .= $vApp->getVapp()->getDescription() . $colSep;
-# $ret .= $vApp->getVapp()->getTasks() . $colSep;
-  $ret .= $vApp->getVapp()->get_name() . $colSep;
-  $ret .= $vApp->getVapp()->get_operationKey() . $colSep;
-  $ret .= $vApp->getVapp()->get_id() . $colSep;
-
-  $ret .= $vApp->getId() . $colSep;
-  $vms=array();
-  foreach($vApp->getContainedVms() as $aVM) {
-    array_push($vms, $aVM->get_name());
-  }
-  $ret .= "[" . join (", ", $vms) . "]" . $colSep;
-
-  $networkConfigArray=array();
-  foreach($vApp->getNetworkConfigSettings()->getNetworkConfig() as $aNetworkConfig) {
-    $t  = "[";
-    $t .= "Desc="    . $aNetworkConfig->getDescription() . ", ";
-#   TO_DO VMware_VCloud_API_NetworkConfigurationType , for $aNetworkConfig->getConfiguration
-    $t .= "IsDepld=" . $aNetworkConfig->getIsDeployed() . ", ";
-    $t .= "NetName=" . $aNetworkConfig->get_networkName();
-    $t .= "]";
-    array_push($networkConfigArray, $t);
-  }
-  $ret .= "[" . join (", ", $networkConfigArray) . "]" . $colSep;
-
-  $ret .= $vApp->getLeaseSettings()->getDeploymentLeaseInSeconds() . $colSep;
-  $ret .= $vApp->getLeaseSettings()->getStorageLeaseInSeconds() . $colSep;
-  $ret .= $vApp->getLeaseSettings()->getDeploymentLeaseExpiration() . $colSep;
-  $ret .= $vApp->getLeaseSettings()->getStorageLeaseExpiration() . $colSep;
-  # $ret .= $vApp->getLeaseSettings()->getInfo() . $colSep;
-
-  # TO_DO StartupSettings
-  # $ret .= $vApp->getStartupSettings() . $colSep;
-  $networks=array();
-  foreach($vApp->getNetworkSettings()->getNetwork() as $aNetwork) {
-    array_push($networks, $aNetwork->get_name());
-  }
-  $ret .= "[" . join (", ", $networks) . "]" . $colSep;
-  ## TO_DO class VMware_VCloud_API_ControlAccessParamsType for $vApp->getControlAccess()
-  # $ret .= $vApp->getControlAccess() . $colSep;
-  $ret .= $vApp->getStatus() . $colSep;
-  $ret .= $vApp->getOwner()->getUser()->get_name() . $colSep;
-
-  # TO_DO array of uuids from $vApp->getVmUUIDs()
-  # $ret .= $vApp->getVmUUIDs() . $colSep;
-  # TO_DO class VMware_VCloud_API_MetadataType for $vApp->getMetadata() 
-  # $ret .= $vApp->getMetadata() . $colSep;
-  $ret .= $vApp->getEntityId();
-  return $ret;
-}
-
-function vM2CsvRow($vm) {
-  global $colSep;
-  $ret  = $vm->getVAppScopedLocalId() . $colSep;
-# $ret .= $vm->getEnvironment()->...  . $colSep; ## TO_DO
-  $ret .= $vm->getVmCapabilities()->getMemoryHotAddEnabled() . $colSep;
-  $ret .= $vm->getVmCapabilities()->getCpuHotAddEnabled() . $colSep;
-
-##
-## TO_DO : VM Storage Profile
-##
-##  $storProfs=array();
-##  foreach ($vm->getStorageProfile() as $aSP) {
-##    foreach ($aSP as $oSP) {
-##      array_push($storProfs, $oSP->get_name() ??? );
-##    }
-##  }
-##  $ret .= join (", ", $storProfs) . $colSep;
-
-  $ret .= $vm->get_needsCustomization() . $colSep;
-  $ret .= $vm->get_nestedHypervisorEnabled() . $colSep;
-# $ret .= $vm->getVAppParent() . $colSep;
-
-# TO_DO
-# foreach($vm->getSection() as $aSection) {
-#   ## TO_DO: class VMware_VCloud_API_OVF_VirtualHardwareSection_Type for $aSection
-#   ## TO_DO: objects of class VMware_VCloud_API_OVF_VSSD_Type , for $aSection->getSystem()
-#   $ret .= $aSection->getDescription() . $colSep;
-#   $ret .= join(", ", $aSection->getSystem()->getNotes()) . $colSep;
-# }
-
-  $ret .= $vm->getDateCreated() . $colSep;
-  $ret .= $vm->get_deployed() . $colSep;
-# $ret .= $vm->getFiles() . $colSep;
-  $ret .= $vm->get_status() . $colSep;
-  $ret .= $vm->getDescription() . $colSep;
-# $ret .= $vm->getTasks() . $colSep;
-  $ret .= $vm->get_name() . $colSep;
-  $ret .= $vm->get_operationKey();
-# $ret .= $vm->get_id() . $colSep;
-  return $ret;
-}
-
-
-function vAppCsvHeader() {
-  global $colSep;
-  $ret  = "Owner" . $colSep;
-  $ret .= "InMaintenanceMode" . $colSep;
-  $ret .= "LeaseSettings" . $colSep;
-  $ret .= "DateCreated" . $colSep;
-  $ret .= "Deployed" . $colSep;
-  $ret .= "Status" . $colSep;
-  $ret .= "Description" . $colSep;
-  $ret .= "Name" . $colSep;
-  $ret .= "OperationKey" . $colSep;
-  $ret .= "Id" . $colSep;
-  $ret .= "Id2" . $colSep;
-  $ret .= "VMs" . $colSep;
-  $ret .= "NetConfSettings" . $colSep;
-  $ret .= "DeploymentLeaseInSeconds" . $colSep;
-  $ret .= "StorageLeaseInSeconds" . $colSep;
-  $ret .= "DeploymentLeaseExpiration" . $colSep;
-  $ret .= "StorageLeaseExpiration" . $colSep;
-  $ret .= "NetSettings" . $colSep;
-  $ret .= "Status" . $colSep;
-  $ret .= "Owner" . $colSep;
-  $ret .= "EntityId";
-  return $ret;
-}
-
-function vMCsvHeader() {
-  global $colSep;
-  $ret  = "VAppScopedLocalId" . $colSep;
-  $ret .= "MemoryHotAddEnabled" . $colSep;
-  $ret .= "CpuHotAddEnabled" . $colSep;
-  $ret .= "NeedsCustomization" . $colSep;
-  $ret .= "NestedHypervisorEnabled" . $colSep;
-  $ret .= "DateCreated" . $colSep;
-  $ret .= "Deployed" . $colSep;
-  $ret .= "Status" . $colSep;
-  $ret .= "Description" . $colSep;
-  $ret .= "Name" . $colSep;
-  $ret .= "OperationKey";
-  return $ret;
-}
-
-
-
-###
 
 /**
  * Returns a new organization object
@@ -995,7 +463,7 @@ function vm2obj(&$vapp, &$sdkVM) {
     }
   
   }
-# print "DEBUG: VM: name=" .  $sdkVM->get_name() . ", status=" . $sdkVM->get_status() . " i amb xarxes:\n";
+# print "DEBUG: VM: name=" .  $sdkVM->get_name() . ", status=" . $sdkVM->get_status() . " i amb xarxes:" . PHP_EOL;
 # print var_dump($vmNetworks);
 
   return new VM($sdkVM->get_name(), $sdkVM->get_id(), $sdkVM->get_status(), $vmNetworks, $vapp);
@@ -1012,6 +480,9 @@ function simplifyString($str) {
  * Generates a GraphViz diagram
  *
  * See also:
+ * * Docs        : http://www.graphviz.org/Documentation.php
+ * * Node, Edge and Graph Attributes:
+ *                 http://www.graphviz.org/content/attrs
  * * Node  shapes: http://www.graphviz.org/doc/info/shapes.html
  * * Arrow shapes: http://www.graphviz.org/doc/info/arrows.html
  *
@@ -1025,14 +496,18 @@ function simplifyString($str) {
  */
 function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   global $oFile;
+  global $rankDir;
+
+  $isolatedNets = getIsolatedNets($vseNets, array_merge($vapps, $vms));
 
   ## Open output file
   ($fp = fopen($oFile, 'w')) || die ("Can't open output file $oFile");
 
   ## Headers
   fwrite($fp, "digraph vCloud {"                                . PHP_EOL);
-  fwrite($fp, "  rankdir=BT;    # LR RL BT TB"                  . PHP_EOL);
+  fwrite($fp, "  rankdir=$rankDir;    # LR RL BT TB"            . PHP_EOL);
   fwrite($fp, "  splines=false; # avoid curve lines"            . PHP_EOL);
+  fwrite($fp, "  edge [arrowhead=none,arrowtail=none];"         . PHP_EOL);
 
   fwrite($fp, "  {"                                             . PHP_EOL);
   fwrite($fp, "    node [style=filled, fillcolor=\"#C0C0C0\"];" . PHP_EOL);
@@ -1050,99 +525,70 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   ## Node definitions
   ###################
 
-# print "Orgs:\n";
-# print "========\n";
-# var_dump($orgs);
-
   fwrite($fp, "  # Orgs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=house];"                      . PHP_EOL);
 
-  foreach($orgs as $aOrg) {
-    $id=simplifyString($aOrg->name);
-    fwrite($fp, "    \"$id\" [label=\"" . $aOrg->name . "\"]". PHP_EOL);
-    fwrite($fp, "    rank = same; org; \"$id\";"             . PHP_EOL);
+  foreach($orgs as $aNode) {
+    printNode($fp, $aNode);
   }
   fwrite($fp, "  }"                                          . PHP_EOL);
-
-
-# print "vDCs:\n";
-# print "========\n";
-# var_dump($vdcs);
 
   fwrite($fp, "  # vDCs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=invhouse];"                   . PHP_EOL);
 
-  foreach($vdcs as $aVdc) {
-    $id=simplifyString($aVdc->id);
-    fwrite($fp, "    $id [label=\"" . $aVdc->name . "\"]"    . PHP_EOL);
-    fwrite($fp, "    rank = same; vDC; $id;"                 . PHP_EOL);
+  foreach($vdcs as $aNode) {
+    printNode($fp, $aNode);
   }
   fwrite($fp, "  }"                                          . PHP_EOL);
-
-# print "vSEs:\n";
-# print "========\n";
-# var_dump($vses);
 
   fwrite($fp, "  # vSEs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=doublecircle];"               . PHP_EOL);
 
-  foreach($vses as $aVse) {
-    $id=simplifyString($aVse->id);
-    fwrite($fp, "    $id [label=\"" . $aVse->name . "\"]"    . PHP_EOL);
-    fwrite($fp, "    rank = same; vSE; $id;"                 . PHP_EOL);
+  foreach($vses as $aNode) {
+    printNode($fp, $aNode);
   }
   fwrite($fp, "  }"                                          . PHP_EOL);
-
-# print "vseNets:\n";
-# print "========\n";
-# var_dump($vseNets);
 
   fwrite($fp, "  # vSE Networks"                             . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=parallelogram];"              . PHP_EOL);
-
-  foreach($vseNets as $aVseNet) {
-    $id=simplifyString($aVseNet->name);
-    fwrite($fp, "    \"$id\" [label=\"" . $aVseNet->name . "\"]" . PHP_EOL);
-    fwrite($fp, "    rank = same; network; \"$id\";"             . PHP_EOL);
+  foreach($vseNets as $aNode) {
+    printNode($fp, $aNode);
   }
   fwrite($fp, "  }"                                          . PHP_EOL);
 
-# print "vApps:\n";
-# print "========\n";
-# var_dump($vapps);
+  # $isolatedNets
+  fwrite($fp, "  # Isolated Networks"                        . PHP_EOL);
+  fwrite($fp, "  {"                                          . PHP_EOL);
+  fwrite($fp, "    node [shape=parallelogram,style=filled,fillcolor=\"#C0C0C0\"];" . PHP_EOL);
+  foreach($isolatedNets as $aNode) {
+    printNode($fp, $aNode);
+  }
+  fwrite($fp, "  }"                                          . PHP_EOL);
 
   fwrite($fp, "  # vApps"                                    . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=Msquare];"                    . PHP_EOL);
 
-  foreach($vapps as $aVapp) {
-    $id=simplifyString($aVapp->id);
-    fwrite($fp, "    $id [label=\"" . $aVapp->name . "\"]" . PHP_EOL);
-    fwrite($fp, "    rank = same; vApp; $id;"                 . PHP_EOL);
+  foreach($vapps as $aNode) {
+    printNode($fp, $aNode);
   }
   fwrite($fp, "  }"                                          . PHP_EOL);
-
-# print "VMs:\n";
-# print "========\n";
-# var_dump($vms);
 
   fwrite($fp, "  # VMs"                                      . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=box];"                        . PHP_EOL);
 
-  foreach($vms as $aVM) {
-    $id=simplifyString($aVM->id);
-    fwrite($fp, "    $id [label=\"" . $aVM->name . "\"]"     . PHP_EOL);
-    fwrite($fp, "    rank = same; VM; $id;"                 . PHP_EOL);
+  foreach($vms as $aNode) {
+    printNode($fp, $aNode);
   }
   fwrite($fp, "  }"                                          . PHP_EOL);
 
-# print "Storge Profiles: (PENDING, TO_DO)\n";
-# print "========\n";
+# print "Storge Profiles: (PENDING, TO_DO)" . PHP_EOL;
+# print "========" . PHP_EOL;
 # var_dump($storProfs);
 
 
@@ -1150,8 +596,8 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   ## Edge definitions
   ###################
 
-# print "Orgs:\n";
-# print "========\n";
+# print "Orgs:" . PHP_EOL;
+# print "========" . PHP_EOL;
 
   fwrite($fp, "  #"                    . PHP_EOL);
   fwrite($fp, "  # Edges"              . PHP_EOL);
@@ -1179,6 +625,11 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
     printLinks($fp, $aNode);
   }
 
+  fwrite($fp, "  # Isolated Network edges:" . PHP_EOL);
+  foreach($isolatedNets as $aNode) {
+    printLinks($fp, $aNode);
+  }
+
   fwrite($fp, "  # vApp edges:"        . PHP_EOL);
   foreach($vapps as $aNode) {
     printLinks($fp, $aNode);
@@ -1189,8 +640,8 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
     printLinks($fp, $aNode);
   }
 
-# print "Storge Profiles: (PENDING, TO_DO)\n";
-# print "========\n";
+# print "Storge Profiles: (PENDING, TO_DO)" . PHP_EOL;
+# print "========" . PHP_EOL;
 
   fwrite($fp, "}" . PHP_EOL);
   fclose($fp) || die ("Can't close output file");
@@ -1198,18 +649,102 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 }
 
 /**
- * Generates links of an object when generating a GraphViz diagram
+ * Generates Edges pointing to an object when generating a GraphViz diagram
  *
  * @param $fp File Handler to write to
- * @param $obj The objecte that has a non-null "parent" field which is an object that has an "id" field.
+ * @param $obj The object that has a non-null "parent" field which is an object that has an "id" field.
  */
 function printLinks($fp, $obj) {
+  global $doPrintVappNetLinks;
+  global $doPrintVmNetLinks;
+  global $doPrintVdc2VmLinks;
+  global $doPrintVdc2VappLinks;
   if($obj == null || ! isset($obj->parent) || ! is_object($obj->parent) || ! isset($obj->parent->id) ) {
     return;
   }
   $id=simplifyString($obj->id);
   $pId=simplifyString($obj->parent->id);
-  fwrite($fp, "    \"$pId\"->\"$id\";" . PHP_EOL);
+
+  $shouldPrintLink=true;
+  if(get_class($obj) === "Vapp" && ! $doPrintVdc2VappLinks) {
+    $shouldPrintLink=false;
+  }
+
+  if($shouldPrintLink) {
+    $attrs='';
+    if(get_class($obj) === "IsolatedNetwork") {
+      $attrs=' [style="dotted"]';
+    }
+    fwrite($fp, "    \"$pId\":n->\"$id\":s$attrs;" . PHP_EOL);
+
+    if(get_class($obj) === "VM" && $doPrintVdc2VmLinks) {
+      $vdcId=simplifyString($obj->vdc->id);
+      fwrite($fp, "    \"$vdcId\":n->\"$id\":s$attrs;" . PHP_EOL);
+    }
+
+  }
+
+  if((get_class($obj) === "Vapp" && $doPrintVappNetLinks) || (get_class($obj) === "VM" && $doPrintVmNetLinks)) {
+    foreach($obj->networks as $aNetwork) {
+      ## On networks id == name, so this string should be network's id.
+      fwrite($fp, "    \"" . $aNetwork . "\":n->\"$id\":s;" . PHP_EOL);
+    }
+  }
+}
+
+/**
+ * Generates node entry of an object when generating a GraphViz diagram
+ *
+ * @param $fp File Handler to write to
+ * @param $obj The object that has non-null "id" and "name" fields and a static field "classDisplayName".
+ */
+function printNode($fp, $obj) {
+    $id=simplifyString($obj->id);
+    fwrite($fp, "    \"$id\" [label=\"" . $obj->name . "\"]"                 . PHP_EOL);
+    fwrite($fp, "    rank = same; " . $obj::$classDisplayName . "; \"$id\";" . PHP_EOL);
+}
+
+/**
+ * Returns the network object representing isolated networks
+ *
+ * @param $vseNets Array of VseNetwork objects from this lib
+ * @param $vms Array of VM objects from this lib
+ * @return $array of network objects
+ */
+function getIsolatedNets($vseNets, $vms) {
+  $ret = array();
+
+  foreach($vms as $aObj) {
+    foreach($aObj->networks as $aNetwork) {
+      if(! netNameIsInVseNetworkArrays($aNetwork, $ret, $vseNets)) {
+        $aIsolatedNetwork = new IsolatedNetwork($aNetwork, $aObj);
+        array_push($ret, $aIsolatedNetwork );
+      }
+    }
+  }
+  return $ret;
+}
+
+/**
+ * Returns the network object representing isolated networks
+ *
+ * @param $networkName Name of a network
+ * @param $vseNets Array of VseNetwork objects from this lib
+ * @param $vms Array of IsolatedNetwork objects from this lib
+ * @return boolean True if network name matches with a VseNetwork or a IsolatedNetwork
+ */
+function netNameIsInVseNetworkArrays($networkName, $isolatedNets /* IsolatedNetwork */ , $vseNets /* VseNetwork */) {
+  foreach($isolatedNets as $aNet) {
+    if($networkName === $aNet->name) {
+      return true;
+    }
+  }
+  foreach($vseNets as $aNet) {
+    if($networkName === $aNet->name) {
+      return true;
+    }
+  }
+  return false;
 }
 
 ?>

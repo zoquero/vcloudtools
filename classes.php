@@ -4,6 +4,7 @@
  * A vCloud Organization
  */
 class Org {
+  public static $classDisplayName  = 'org';
   public $parent  = ''; # Usefull for graph
   public $name    = '';
   public $id      = ''; # Can't find it, we will use "name"
@@ -32,6 +33,7 @@ class Org {
  * A vCloud Virtual DataCenter
  */
 class Vdc {
+  public static $classDisplayName  = 'vDC';
   public $parent  = ''; # Usefull for graph
   public $name = '';
   public $id   = '';
@@ -54,6 +56,7 @@ class Vdc {
  * A vShield Edge
  */
 class Vse {
+  public static $classDisplayName  = 'vSE';
   public $parent  = ''; # Usefull for graph
   public $name   = '';
   public $id     = '';
@@ -78,9 +81,10 @@ class Vse {
 }
 
 /**
- * A vShield Edge
+ * A vShield Edge Network
  */
 class VseNetwork {
+  public static $classDisplayName  = 'network';
   public $parent = ''; # Usefull for graph
   public $name   = '';
   public $id     = ''; # Can't find it, we will use "name"
@@ -97,19 +101,6 @@ class VseNetwork {
     $this->parent = $_vse;
     $this->name   = $_name;
     $this->id     = $_name; # Can't find id on API
-/*
-    $this->gw     = $_gw;
-    $this->mask   = $_mask;
-*/
-
-/*
-$___org=$_vdc->org;
-#   $this->org    = $_org;
-    $this->org    = $___org;
-#   $this->vdc    = $_vdc;
-    $this->vdc    = $_vse->vdc;
-    $this->vse    = $_vse;
-*/
     $this->vse    = $_vse;
     $this->vdc    = $_vse->vdc;
     $this->org    = $_vse->vdc->org;
@@ -125,9 +116,36 @@ $___org=$_vdc->org;
 }
 
 /**
+ * An Isolated Network
+ */
+class IsolatedNetwork {
+  public static $classDisplayName  = 'network';
+  public $parent = ''; # Usefull for graph
+  public $name   = '';
+  public $id     = ''; # Can't find it, we will use "name"
+  public $org    = null;
+  public $vdc    = null;
+
+  public function __construct($_name, /* $_gw, $_mask, */ /* &$_org, &$_vdc, */ &$_vmOrVapp) {
+    $this->parent = $_vmOrVapp->parent;
+    $this->name   = $_name;
+    $this->id     = $_name; # Can't find id on API
+    $this->vdc    = $_vmOrVapp->vdc;
+    $this->org    = $_vmOrVapp->vdc->org;
+  }
+
+  public function __toString() {
+    $org = $this->org;
+    $vdc = $this->vdc;
+    return "Isolated Network with name='" . $this->name . /* "', gateway='" . $this->gw . "', mask='" . $this->mask . */ "' from org '" . $org->name . "' and vdc '" . $vdc->name . "'";
+  }
+}
+
+/**
  * A vApp
  */
 class Vapp {
+  public static $classDisplayName  = 'vApp';
   public $parent  = ''; # Usefull for graph
   public $name     = '';
   public $id       = '';
@@ -158,6 +176,7 @@ class Vapp {
  * A VM
  */
 class VM {
+  public static $classDisplayName  = 'VM';
   public $parent   = ''; # Usefull for graph
   public $name     = '';
   public $id       = '';

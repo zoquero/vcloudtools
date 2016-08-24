@@ -1,7 +1,14 @@
 # vcloudtools
+
 **Tools for working with vCloud Director**
 
-These tools make it easer to look for vShield Edge firewall rules when **troubleshooting communications** on your vDCs. It also allows you to **dump your infraestructure to CSV or XML** and to **generate a graphviz diagram** representing it all. It helps to backup your configuration, to plug your cloud to your CMDB (manual integration, if your CMDB doesn't support vCloud API), to account our usage, a step towards monitoring, ... vCloud Director web UI is the tool to manage your cloud, but these non-interactive tools can help you in some situations.
+These tools give you a **better visibility and manageability of your vCloud Infraestructure**. They fill some gaps, some functionalities that can't be found on the vCloud Director web UI or that are not agile enough:
+
+* to **generate a graphviz diagram** representing it all
+* to look for vShield Edge firewall rules when **troubleshooting communications** on your vDCs
+* to **dump your infraestructure to CSV or XML** (it can help you to backup your configuration, to plug your cloud to your CMDB (manual integration, if your CMDB doesn't support vCloud API), to account our usage, a step towards monitoring), ...
+
+vCloud Director web UI is the tool to manage your cloud, but these non-interactive tools really can help you in some situations.
 
 It **requires** [vCloud SDK for PHP for vCloud Suite 5.5](https://developercenter.vmware.com/web/sdk/5.5.0/vcloud-php). Don't forget to add it's folder to your **```include_path```** setting in your php.ini
 
@@ -9,6 +16,8 @@ Tested on Ubuntu 15.04 64b with PHP 5.6.4 against vCloud Director 5.5
 
 zoquero at gmail dot com
 9 August 2016
+
+.
 
 ## exportvcloud.php
 **Dumps** to CSV or XML all the entities (vApps, VMs,  vShields, vDCs and organizations) that you have access to.
