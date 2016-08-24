@@ -505,7 +505,7 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   ## Headers
   fwrite($fp, "#"                                               . PHP_EOL);
-  fwrite($fp, "# Graph genated on " . date("Y/m/d h:i:sa")      . PHP_EOL);
+  fwrite($fp, "# Graph genated on " . date("Y/m/d h:i:s a")      . PHP_EOL);
   fwrite($fp, "# by vcloudtools:"                               . PHP_EOL);
   fwrite($fp, "# https://github.com/zoquero/vcloudtools"        . PHP_EOL);
   fwrite($fp, "#"                                               . PHP_EOL);
