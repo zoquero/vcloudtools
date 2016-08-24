@@ -504,6 +504,12 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   ($fp = fopen($oFile, 'w')) || die ("Can't open output file $oFile");
 
   ## Headers
+  fwrite($fp, "#"                                               . PHP_EOL);
+  fwrite($fp, "# Graph genated on " . date("Y/m/d h:i:sa")      . PHP_EOL);
+  fwrite($fp, "# by vcloudtools:"                               . PHP_EOL);
+  fwrite($fp, "# https://github.com/zoquero/vcloudtools"        . PHP_EOL);
+  fwrite($fp, "#"                                               . PHP_EOL);
+  fwrite($fp, ""                                                . PHP_EOL);
   fwrite($fp, "digraph vCloud {"                                . PHP_EOL);
   fwrite($fp, "  rankdir=$rankDir;    # LR RL BT TB"            . PHP_EOL);
   fwrite($fp, "  splines=false; # avoid curve lines"            . PHP_EOL);
