@@ -255,7 +255,7 @@ if ($flag==true) {
 # print "DEBUG: a vApp: " . $vApp . "\n";
 
           foreach ($aSdkVApp->getVapp()->getChildren()->getVM() as $aVM) {
-            $vm=vm2obj($vdc, $aVM);
+            $vm=vm2obj($vApp, $aVM);
             array_push($vmsArray, $vm);
 # print "DEBUG: a VM: " . $vm . "\n";
           }
@@ -969,10 +969,10 @@ function vApp2obj(&$vdc, &$sdkVApp) {
  * Returns a new VM object
  *
  * @return a new VM object representing that VM
- * @param $vdc The Virtual DataCenter object from this lib, passed by reference
+ * @param $vapp The vApp object from this lib, passed by reference
  * @param $aVM The VM taken from the SDK, passed by reference
  */
-function vm2obj(&$vdc, &$sdkVM) {
+function vm2obj(&$vapp, &$sdkVM) {
 
   # Empirically:
   # * status=3 == Suspended
@@ -998,7 +998,7 @@ function vm2obj(&$vdc, &$sdkVM) {
 # print "DEBUG: VM: name=" .  $sdkVM->get_name() . ", status=" . $sdkVM->get_status() . " i amb xarxes:\n";
 # print var_dump($vmNetworks);
 
-  return new VM($sdkVM->get_name(), $sdkVM->get_id(), $sdkVM->get_status(), $vmNetworks, $vdc);
+  return new VM($sdkVM->get_name(), $sdkVM->get_id(), $sdkVM->get_status(), $vmNetworks, $vapp);
 }
 
 
@@ -1022,13 +1022,14 @@ function simplifyString($str) {
  * @param $vapps Array of vApps
  * @param $vms Array of VMs
  * @param $storProf Array of Storage Profiles
-
  */
 function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   global $oFile;
 
+  ## Open output file
   ($fp = fopen($oFile, 'w')) || die ("Can't open output file $oFile");
 
+  ## Headers
   fwrite($fp, "digraph vCloud {"                                . PHP_EOL);
   fwrite($fp, "  rankdir=BT;    # LR RL BT TB"                  . PHP_EOL);
   fwrite($fp, "  splines=false; # avoid curve lines"            . PHP_EOL);
@@ -1045,60 +1046,170 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fwrite($fp, "    VM      [shape=box];"                        . PHP_EOL);
   fwrite($fp, "  }"                                             . PHP_EOL);
 
+  ###################
+  ## Node definitions
+  ###################
+
 # print "Orgs:\n";
 # print "========\n";
 # var_dump($orgs);
 
-  fwrite($fp, "  # Orgs"                                  . PHP_EOL);
-  fwrite($fp, "  {"                                       . PHP_EOL);
-  fwrite($fp, "    node [shape=house];"                   . PHP_EOL);
+  fwrite($fp, "  # Orgs"                                     . PHP_EOL);
+  fwrite($fp, "  {"                                          . PHP_EOL);
+  fwrite($fp, "    node [shape=house];"                      . PHP_EOL);
 
   foreach($orgs as $aOrg) {
     $id=simplifyString($aOrg->name);
-    fwrite($fp, "    $id [label=\"" . $aOrg->name . "\"]" . PHP_EOL);
-    fwrite($fp, "    rank = same; org; $id;"              . PHP_EOL);
+    fwrite($fp, "    \"$id\" [label=\"" . $aOrg->name . "\"]". PHP_EOL);
+    fwrite($fp, "    rank = same; org; \"$id\";"             . PHP_EOL);
   }
-  fwrite($fp, "  }"                                       . PHP_EOL);
+  fwrite($fp, "  }"                                          . PHP_EOL);
 
 
 # print "vDCs:\n";
 # print "========\n";
 # var_dump($vdcs);
 
-  fwrite($fp, "  # vDCs"                                  . PHP_EOL);
-  fwrite($fp, "  {"                                       . PHP_EOL);
-  fwrite($fp, "    node [shape=invhouse];"                . PHP_EOL);
+  fwrite($fp, "  # vDCs"                                     . PHP_EOL);
+  fwrite($fp, "  {"                                          . PHP_EOL);
+  fwrite($fp, "    node [shape=invhouse];"                   . PHP_EOL);
 
   foreach($vdcs as $aVdc) {
     $id=simplifyString($aVdc->id);
-    fwrite($fp, "    $id [label=\"" . $aVdc->name . "\"]" . PHP_EOL);
-    fwrite($fp, "    rank = same; vDC; $id;"              . PHP_EOL);
+    fwrite($fp, "    $id [label=\"" . $aVdc->name . "\"]"    . PHP_EOL);
+    fwrite($fp, "    rank = same; vDC; $id;"                 . PHP_EOL);
   }
-  fwrite($fp, "  }"                                       . PHP_EOL);
+  fwrite($fp, "  }"                                          . PHP_EOL);
 
 # print "vSEs:\n";
 # print "========\n";
 # var_dump($vses);
 
+  fwrite($fp, "  # vSEs"                                     . PHP_EOL);
+  fwrite($fp, "  {"                                          . PHP_EOL);
+  fwrite($fp, "    node [shape=doublecircle];"               . PHP_EOL);
+
+  foreach($vses as $aVse) {
+    $id=simplifyString($aVse->id);
+    fwrite($fp, "    $id [label=\"" . $aVse->name . "\"]"    . PHP_EOL);
+    fwrite($fp, "    rank = same; vSE; $id;"                 . PHP_EOL);
+  }
+  fwrite($fp, "  }"                                          . PHP_EOL);
+
 # print "vseNets:\n";
 # print "========\n";
 # var_dump($vseNets);
+
+  fwrite($fp, "  # vSE Networks"                             . PHP_EOL);
+  fwrite($fp, "  {"                                          . PHP_EOL);
+  fwrite($fp, "    node [shape=parallelogram];"              . PHP_EOL);
+
+  foreach($vseNets as $aVseNet) {
+    $id=simplifyString($aVseNet->name);
+    fwrite($fp, "    \"$id\" [label=\"" . $aVseNet->name . "\"]" . PHP_EOL);
+    fwrite($fp, "    rank = same; network; \"$id\";"             . PHP_EOL);
+  }
+  fwrite($fp, "  }"                                          . PHP_EOL);
 
 # print "vApps:\n";
 # print "========\n";
 # var_dump($vapps);
 
+  fwrite($fp, "  # vApps"                                    . PHP_EOL);
+  fwrite($fp, "  {"                                          . PHP_EOL);
+  fwrite($fp, "    node [shape=Msquare];"                    . PHP_EOL);
+
+  foreach($vapps as $aVapp) {
+    $id=simplifyString($aVapp->id);
+    fwrite($fp, "    $id [label=\"" . $aVapp->name . "\"]" . PHP_EOL);
+    fwrite($fp, "    rank = same; vApp; $id;"                 . PHP_EOL);
+  }
+  fwrite($fp, "  }"                                          . PHP_EOL);
+
 # print "VMs:\n";
 # print "========\n";
 # var_dump($vms);
+
+  fwrite($fp, "  # VMs"                                      . PHP_EOL);
+  fwrite($fp, "  {"                                          . PHP_EOL);
+  fwrite($fp, "    node [shape=box];"                        . PHP_EOL);
+
+  foreach($vms as $aVM) {
+    $id=simplifyString($aVM->id);
+    fwrite($fp, "    $id [label=\"" . $aVM->name . "\"]"     . PHP_EOL);
+    fwrite($fp, "    rank = same; VM; $id;"                 . PHP_EOL);
+  }
+  fwrite($fp, "  }"                                          . PHP_EOL);
 
 # print "Storge Profiles: (PENDING, TO_DO)\n";
 # print "========\n";
 # var_dump($storProfs);
 
+
+  ###################
+  ## Edge definitions
+  ###################
+
+# print "Orgs:\n";
+# print "========\n";
+
+  fwrite($fp, "  #"                    . PHP_EOL);
+  fwrite($fp, "  # Edges"              . PHP_EOL);
+  fwrite($fp, "  #"                    . PHP_EOL);
+  fwrite($fp, ""                       . PHP_EOL);
+  fwrite($fp, "  # Org edges:"         . PHP_EOL);
+
+  #              # Org edges:"
+  foreach($orgs as $aNode) {
+    printLinks($fp, $aNode);
+  }
+
+  fwrite($fp, "  # vDC edges:"         . PHP_EOL);
+  foreach($vdcs as $aNode) {
+    printLinks($fp, $aNode);
+  }
+
+  fwrite($fp, "  # vSE edges:"         . PHP_EOL);
+  foreach($vses as $aNode) {
+    printLinks($fp, $aNode);
+  }
+
+  fwrite($fp, "  # vSE Network edges:" . PHP_EOL);
+  foreach($vseNets as $aNode) {
+    printLinks($fp, $aNode);
+  }
+
+  fwrite($fp, "  # vApp edges:"        . PHP_EOL);
+  foreach($vapps as $aNode) {
+    printLinks($fp, $aNode);
+  }
+
+  fwrite($fp, "  # VM edges:"          . PHP_EOL);
+  foreach($vms as $aNode) {
+    printLinks($fp, $aNode);
+  }
+
+# print "Storge Profiles: (PENDING, TO_DO)\n";
+# print "========\n";
+
   fwrite($fp, "}" . PHP_EOL);
   fclose($fp) || die ("Can't close output file");
 
+}
+
+/**
+ * Generates links of an object when generating a GraphViz diagram
+ *
+ * @param $fp File Handler to write to
+ * @param $obj The objecte that has a non-null "parent" field which is an object that has an "id" field.
+ */
+function printLinks($fp, $obj) {
+  if($obj == null || ! isset($obj->parent) || ! is_object($obj->parent) || ! isset($obj->parent->id) ) {
+    return;
+  }
+  $id=simplifyString($obj->id);
+  $pId=simplifyString($obj->parent->id);
+  fwrite($fp, "    \"$pId\"->\"$id\";" . PHP_EOL);
 }
 
 ?>
