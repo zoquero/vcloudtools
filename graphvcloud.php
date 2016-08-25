@@ -2,7 +2,9 @@
 /**
  * Generates a graphviz diagram representing your vCloud entities.
  * <p>
- * Generates a graphviz diagram representing your vCloud entities (orgs, vDCs, vShield Edges, ...). <br/>
+ * Generates a graphviz diagram representing your vCloud entities
+ * (orgs, vDCs, vShield Edges, networks, Storage Profiles, vApps and VMs).
+ * <p>
  * Then you can render the diagram like this: <br/>
  * <ul>
  *   <li>PNG: <PRE>dot -Tpng ./mycloud.dot -o ./myvcloud.png</PRE>
@@ -14,27 +16,19 @@
  *              <li> vCloud SDK for PHP for vCloud Suite 5.5
  *             ( https://developercenter.vmware.com/web/sdk/5.5.0/vcloud-php )
  * </ul>
- * VM:      hash 'name', 'id', networkReference[], vAppReference
- * vApp:    hash 'name', 'id', networkReference[]
- * network: hash 'name', 'id', addressing (net/mask string)
- * vSE:     hash 'name', 'id', vDCReference
- * vDC:     hash 'name', 'id', orgReference
- * org:     hash 'name', isEnabled
- *
  * <p>
  * Tested on Ubuntu 15.04 64b with PHP 5.6.4
- *
  * <p>
  *   TO_DO:
  *   <ul>
  *     <li> To be able to graph just a subset of your infraestructure
  *            (just one organization, vDC, vShield Edge, vApp or VM
  *             and all of it's objects downwards).
- *     <li> Add Storage Profiles
+ *     <li> Set different color to each type of entity
  *   </ul>
  *
  * @author Angel Galindo Muñoz (zoquero at gmail dot com)
- * @version 1.0
+ * @version 1.1
  * @since 20/08/2016
  * @see http://graphviz.org/
  */
@@ -68,6 +62,7 @@ $doPrintVappNetLinks  = true;
 $doPrintVmNetLinks    = true;
 $doPrintVdc2VappLinks = false;
 $doPrintVdc2VmLinks   = false;
+$doPrintVmStorProfLinks = true;
 $rankDir="BT";                 # LR RL BT TB"
 
 // Initialize parameters
@@ -184,7 +179,7 @@ if ($flag==true) {
   $vseNetsArray   = array();
   $vappsArray     = array();
   $vmsArray       = array();
-  $storProfsArray = array(); # TO_DO
+  $storProfsArray = array();
 
   // create sdk admin object
   $sdkAdminObj = $service->createSDKAdminObj();
@@ -224,6 +219,15 @@ if ($flag==true) {
 
       $vdc=vdc2obj($org, $sdkVdc->getVdc());
       array_push($vdcsArray, $vdc);
+
+      # Storage Profiles
+      foreach($sdkVdc->getVdcStorageProfiles() as $storageProfile) {
+        $storProf=storProf2obj($vdc, $storageProfile);
+        array_push($storProfsArray, $storProf);
+        echo "-* storProf: " . $storProf->name . "" . PHP_EOL;
+      }
+
+      # vShield Edge Gateways
 
       // create admin vdc object
       $adminVdcRefs = $adminOrgObj->getAdminVdcRefs($sdkVdc->getVdc()->get_name());
@@ -436,23 +440,19 @@ function vApp2obj(&$vdc, &$sdkVApp) {
 /**
  * Returns a new VM object
  *
+ * <p>
+ * About the "<i>status</i>" of the VMs: Empirically:
+ * <ul>
+ *   <li> status=3 == Suspended  </li>
+ *   <li> status=4 == PoweredOn  </li>
+ *   <li> status=8 == PoweredOff </li>
+ * </ul>
+ *
  * @return a new VM object representing that VM
  * @param $vapp The vApp object from this lib, passed by reference
  * @param $aVM The VM taken from the SDK, passed by reference
  */
 function vm2obj(&$vapp, &$sdkVM) {
-
-  # Empirically:
-  # * status=3 == Suspended
-  # * status=4 == PoweredOn
-  # * status=8 == PoweredOff
-#           $sdkVM->get_name()
-#           $sdkVM->get_status()
-
-
-  ## TO_DO : VM Storage Profiles
-  ## $sdkVM->getStorageProfile()
-  
   $vmNetworks = array();
   foreach ($sdkVM->getSection() as $aSection) {
     if(get_class($aSection) == "VMware_VCloud_API_NetworkConnectionSectionType") {
@@ -463,12 +463,29 @@ function vm2obj(&$vapp, &$sdkVM) {
     }
   
   }
-# print "DEBUG: VM: name=" .  $sdkVM->get_name() . ", status=" . $sdkVM->get_status() . " i amb xarxes:" . PHP_EOL;
-# print var_dump($vmNetworks);
-
-  return new VM($sdkVM->get_name(), $sdkVM->get_id(), $sdkVM->get_status(), $vmNetworks, $vapp);
+  return new VM($sdkVM->get_name(), $sdkVM->get_id(), $sdkVM->get_status(), $vmNetworks, $sdkVM->getStorageProfile()->get_name(), $vapp);
 }
 
+/**
+ * Returns a new Storage Profile object
+ *
+ * @param $vdc The vDC object from this lib, passed by reference
+ * @param $sp The storageProfile taken from the SDK, passed by reference
+ * @return StorageProfile A new StorageProfile object representing that Storage Profile
+ */
+function storProf2obj(&$vdc, &$sp) {
+#
+# $sp->getEnabled()  # 1 enabled
+# $sp->getUnits()    # MB
+# $sp->getLimit()    # 112640
+# $sp->getDefault()  # 1
+# $sp->get_name()    # CLOUD-SAS
+# $sp->get_id()      # id
+#  .... where's the current disk usage?? ( TO_DO )
+#
+
+  return new StorageProfile($sp->get_name(), $sp->get_id(), $sp->getEnabled(), $sp->getLimit(), $sp->getUnits(), $vdc);
+}
 
 function simplifyString($str) {
   $r = str_replace('-', '_', $str);
@@ -517,14 +534,20 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  {"                                             . PHP_EOL);
   fwrite($fp, "    node [style=filled, fillcolor=\"#C0C0C0\"];" . PHP_EOL);
-  fwrite($fp, "    org -> vDC -> vSE -> network -> vApp -> VM"  . PHP_EOL);
+  fwrite($fp, "    org -> vDC"                                  . PHP_EOL);
+  fwrite($fp, "    vDC -> vSE"                                  . PHP_EOL);
+  fwrite($fp, "    vSE -> network"                              . PHP_EOL);
+  fwrite($fp, "    network -> StorProf [style=invis]"           . PHP_EOL);
+  fwrite($fp, "    StorProf -> vApp [style=invis]"              . PHP_EOL);
+  fwrite($fp, "    vApp -> VM"                                  . PHP_EOL);
   fwrite($fp, ""                                                . PHP_EOL);
-  fwrite($fp, "    org     [shape=house];"                      . PHP_EOL);
-  fwrite($fp, "    vDC     [shape=invhouse];"                   . PHP_EOL);
-  fwrite($fp, "    vSE     [shape=doublecircle];"               . PHP_EOL);
-  fwrite($fp, "    network [shape=parallelogram];"              . PHP_EOL);
-  fwrite($fp, "    vApp    [shape=Msquare];"                    . PHP_EOL);
-  fwrite($fp, "    VM      [shape=box];"                        . PHP_EOL);
+  fwrite($fp, "    org      [shape=house];"                     . PHP_EOL);
+  fwrite($fp, "    vDC      [shape=invhouse];"                  . PHP_EOL);
+  fwrite($fp, "    vSE      [shape=doublecircle];"              . PHP_EOL);
+  fwrite($fp, "    network  [shape=parallelogram];"             . PHP_EOL);
+  fwrite($fp, "    StorProf [shape=circle];"                    . PHP_EOL);
+  fwrite($fp, "    vApp     [shape=Msquare];"                   . PHP_EOL);
+  fwrite($fp, "    VM       [shape=box];"                       . PHP_EOL);
   fwrite($fp, "  }"                                             . PHP_EOL);
 
   ###################
@@ -534,7 +557,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fwrite($fp, "  # Orgs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=house];"                      . PHP_EOL);
-
   foreach($orgs as $aNode) {
     printNode($fp, $aNode);
   }
@@ -543,7 +565,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fwrite($fp, "  # vDCs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=invhouse];"                   . PHP_EOL);
-
   foreach($vdcs as $aNode) {
     printNode($fp, $aNode);
   }
@@ -552,7 +573,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fwrite($fp, "  # vSEs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=doublecircle];"               . PHP_EOL);
-
   foreach($vses as $aNode) {
     printNode($fp, $aNode);
   }
@@ -575,10 +595,17 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   }
   fwrite($fp, "  }"                                          . PHP_EOL);
 
+  fwrite($fp, "  # Storage Profiles"                         . PHP_EOL);
+  fwrite($fp, "  {"                                          . PHP_EOL);
+  fwrite($fp, "    node [shape=circle];"                     . PHP_EOL);
+  foreach($storProfs as $aNode) {
+    printNode($fp, $aNode);
+  }
+  fwrite($fp, "  }"                                          . PHP_EOL);
+
   fwrite($fp, "  # vApps"                                    . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=Msquare];"                    . PHP_EOL);
-
   foreach($vapps as $aNode) {
     printNode($fp, $aNode);
   }
@@ -587,16 +614,10 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fwrite($fp, "  # VMs"                                      . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
   fwrite($fp, "    node [shape=box];"                        . PHP_EOL);
-
   foreach($vms as $aNode) {
     printNode($fp, $aNode);
   }
   fwrite($fp, "  }"                                          . PHP_EOL);
-
-# print "Storge Profiles: (PENDING, TO_DO)" . PHP_EOL;
-# print "========" . PHP_EOL;
-# var_dump($storProfs);
-
 
   ###################
   ## Edge definitions
@@ -613,41 +634,43 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   #              # Org edges:"
   foreach($orgs as $aNode) {
-    printLinks($fp, $aNode);
+    printLinks($fp, $aNode, $storProfs);
   }
 
   fwrite($fp, "  # vDC edges:"         . PHP_EOL);
   foreach($vdcs as $aNode) {
-    printLinks($fp, $aNode);
+    printLinks($fp, $aNode, $storProfs);
   }
 
   fwrite($fp, "  # vSE edges:"         . PHP_EOL);
   foreach($vses as $aNode) {
-    printLinks($fp, $aNode);
+    printLinks($fp, $aNode, $storProfs);
   }
 
   fwrite($fp, "  # vSE Network edges:" . PHP_EOL);
   foreach($vseNets as $aNode) {
-    printLinks($fp, $aNode);
+    printLinks($fp, $aNode, $storProfs);
   }
 
   fwrite($fp, "  # Isolated Network edges:" . PHP_EOL);
   foreach($isolatedNets as $aNode) {
-    printLinks($fp, $aNode);
+    printLinks($fp, $aNode, $storProfs);
+  }
+
+  fwrite($fp, "  # Storage Profiles:"  . PHP_EOL);
+  foreach($storProfs as $aNode) {
+    printLinks($fp, $aNode, $storProfs);
   }
 
   fwrite($fp, "  # vApp edges:"        . PHP_EOL);
   foreach($vapps as $aNode) {
-    printLinks($fp, $aNode);
+    printLinks($fp, $aNode, $storProfs);
   }
 
   fwrite($fp, "  # VM edges:"          . PHP_EOL);
   foreach($vms as $aNode) {
-    printLinks($fp, $aNode);
+    printLinks($fp, $aNode, $storProfs);
   }
-
-# print "Storge Profiles: (PENDING, TO_DO)" . PHP_EOL;
-# print "========" . PHP_EOL;
 
   fwrite($fp, "}" . PHP_EOL);
   fclose($fp) || die ("Can't close output file");
@@ -657,14 +680,17 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 /**
  * Generates Edges pointing to an object when generating a GraphViz diagram
  *
+ *
  * @param $fp File Handler to write to
  * @param $obj The object that has a non-null "parent" field which is an object that has an "id" field.
+ * @param $storProfs To be able to look for the id of the storage profile it needs to access to the array of StorageProfile $storProfs, ... quick fix 
  */
-function printLinks($fp, $obj) {
+function printLinks($fp, $obj, $storProfs) {
   global $doPrintVappNetLinks;
   global $doPrintVmNetLinks;
   global $doPrintVdc2VmLinks;
   global $doPrintVdc2VappLinks;
+  global $doPrintVmStorProfLinks;
   if($obj == null || ! isset($obj->parent) || ! is_object($obj->parent) || ! isset($obj->parent->id) ) {
     return;
   }
@@ -687,14 +713,29 @@ function printLinks($fp, $obj) {
       $vdcId=simplifyString($obj->vdc->id);
       fwrite($fp, "    \"$vdcId\":n->\"$id\":s$attrs;" . PHP_EOL);
     }
-
   }
 
+  ## Network Links for VMs and vApps
   if((get_class($obj) === "Vapp" && $doPrintVappNetLinks) || (get_class($obj) === "VM" && $doPrintVmNetLinks)) {
     foreach($obj->networks as $aNetwork) {
       ## On networks id == name, so this string should be network's id.
       fwrite($fp, "    \"" . $aNetwork . "\":n->\"$id\":s;" . PHP_EOL);
     }
+  }
+
+  ## Storage Profile Links for VMs
+  if(get_class($obj) === "VM" && $doPrintVmStorProfLinks) {
+    fwrite($fp, "    \"" . simplifyString(getStorProfIdFromName($obj->storProf, $storProfs)) . "\":n->\"$id\":s;" . PHP_EOL);
+  }
+
+}
+
+function getStorProfIdFromName($storProf, &$storProfs) {
+  foreach($storProfs as $aStorProf) {
+    if($aStorProf->name == $storProf) {
+      return $aStorProf->id;
+    }
+    return null;
   }
 }
 
