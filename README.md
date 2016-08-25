@@ -4,7 +4,7 @@
 
 These tools give you a **better visibility and manageability of your vCloud Infraestructure**. They fill some gaps, some functionalities that can't be found on the vCloud Director web UI or that are not agile enough:
 
-* to **generate a graphviz diagram** representing it all
+* to **generate a graphviz diagram** representing your organizations, Virtual Datacenters, vShield Edges, networks, Storage Profiles, vApps and VMs)
 * to look for vShield Edge firewall rules when **troubleshooting communications** on your vDCs
 * to **dump your infraestructure to CSV or XML** (it can help you to backup your configuration, to plug your cloud to your CMDB (manual integration, if your CMDB doesn't support vCloud API), to account our usage, a step towards monitoring), ...
 
