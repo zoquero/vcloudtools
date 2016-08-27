@@ -555,17 +555,42 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  {"                                             . PHP_EOL);
   fwrite($fp, "    node [style=filled,fillcolor=\"#C0C0C0\"];" . PHP_EOL);
+/*
   fwrite($fp, "    org -> vDC"                                  . PHP_EOL);
   fwrite($fp, "    vDC -> vSE"                                  . PHP_EOL);
   fwrite($fp, "    vSE -> network"                              . PHP_EOL);
   fwrite($fp, "    network -> StorProf [style=invis]"           . PHP_EOL);
   fwrite($fp, "    StorProf -> vApp [style=invis]"              . PHP_EOL);
   fwrite($fp, "    vApp -> VM"                                  . PHP_EOL);
+*/
+
+  fwrite($fp, "    " . Org::$classDisplayName            . " -> " . Vdc::$classDisplayName                               . PHP_EOL);
+  fwrite($fp, "    " . Vdc::$classDisplayName            . " -> " . Vse::$classDisplayName                               . PHP_EOL);
+  fwrite($fp, "    " . Vse::$classDisplayName            . " -> " . VseNetwork::$classDisplayName                        . PHP_EOL);
+  fwrite($fp, "    " . VseNetwork::$classDisplayName     . " -> " . StorageProfile::$classDisplayName . " [style=invis]" . PHP_EOL);
+  fwrite($fp, "    " . StorageProfile::$classDisplayName . " -> " . Vapp::$classDisplayName           . " [style=invis]" . PHP_EOL);
+  fwrite($fp, "    " . Vapp::$classDisplayName           . " -> " . VM::$classDisplayName                                . PHP_EOL);
+
+
   fwrite($fp, ""                                                . PHP_EOL);
-  fwrite($fp, "    org      [shape=". getNodeShape("Org")            . ",style=filled,fillcolor=\"" . getNodeColor("Org") . "\"];" . PHP_EOL);
+
+
+/*
+TO_DO: Convert it to : ...
+  fwrite($fp, getNodeLegend("Org") . PHP_EOL);
+  fwrite($fp, getNodeLegend("Org") . PHP_EOL);
+  fwrite($fp, getNodeLegend("Vdc") . PHP_EOL);
+  fwrite($fp, getNodeLegend("Vse") . PHP_EOL);
+  fwrite($fp, getNodeLegend("VseNetwork") . PHP_EOL);
+  fwrite($fp, getNodeLegend("StorageProfile") . PHP_EOL);
+  fwrite($fp, getNodeLegend("Vapp") . PHP_EOL);
+  fwrite($fp, getNodeLegend("VM") . PHP_EOL);
+*/
+
+  fwrite($fp, "    Org      [shape=". getNodeShape("Org")            . ",style=filled,fillcolor=\"" . getNodeColor("Org") . "\"];" . PHP_EOL);
   fwrite($fp, "    vDC      [shape=". getNodeShape("Vdc")            . ",style=filled,fillcolor=\"" . getNodeColor("Vdc")  . "\"];" . PHP_EOL);
   fwrite($fp, "    vSE      [shape=". getNodeShape("Vse")            . ",style=filled,fillcolor=\"" . getNodeColor("Vse")  . "\"];" . PHP_EOL);
-  fwrite($fp, "    network  [shape=". getNodeShape("VseNetwork")     . ",style=filled,fillcolor=\"" . getNodeColor("VseNetwork") . "\"];" . PHP_EOL);
+  fwrite($fp, "    Network  [shape=". getNodeShape("VseNetwork")     . ",style=filled,fillcolor=\"" . getNodeColor("VseNetwork") . "\"];" . PHP_EOL);
   fwrite($fp, "    StorProf [shape=". getNodeShape("StorageProfile") . ",style=filled,fillcolor=\"" . getNodeColor("StorageProfile")  . "\"];" . PHP_EOL);
   fwrite($fp, "    vApp     [shape=". getNodeShape("Vapp")           . ",style=filled,fillcolor=\"" . getNodeColor("Vapp")  . "\"];" . PHP_EOL);
   fwrite($fp, "    VM       [shape=". getNodeShape("VM")             . ",style=filled,fillcolor=\"" . getNodeColor("VM")   . "\"];" . PHP_EOL);
@@ -698,6 +723,10 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
 }
 
+function getNodeLegend($nodeType) {
+  return "    " . $nodeType . " [shape=". getNodeShape($nodeType) . ",style=filled,fillcolor=\"" . getNodeColor($nodeType) . "\"];";
+}
+
 function getNodeShape($nodeType) {
   if($nodeType      == "Org") {
     return SHAPE4ORG;
@@ -724,7 +753,7 @@ function getNodeShape($nodeType) {
     return SHAPE4STO;
   }
   else {
-    die("Missing shape for " . $nodeType);
+    die("Missing legend for " . $nodeType);
   }
 }
 

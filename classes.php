@@ -4,7 +4,7 @@
  * A vCloud Organization
  */
 class Org {
-  public static $classDisplayName  = 'org';
+  public static $classDisplayName  = 'Org';
   public $parent  = ''; # Usefull for graph
   public $name    = '';
   public $id      = ''; # Can't find it, we will use "name"
@@ -84,7 +84,7 @@ class Vse {
  * A vShield Edge Network
  */
 class VseNetwork {
-  public static $classDisplayName  = 'network';
+  public static $classDisplayName  = 'Network';
   public $parent = ''; # Usefull for graph
   public $name   = '';
   public $id     = ''; # Can't find it, we will use "name"
@@ -119,7 +119,7 @@ class VseNetwork {
  * An Isolated Network
  */
 class IsolatedNetwork {
-  public static $classDisplayName  = 'network';
+  public static $classDisplayName  = 'Network';
   public $parent = ''; # Usefull for graph
   public $name   = '';
   public $id     = ''; # Can't find it, we will use "name"
