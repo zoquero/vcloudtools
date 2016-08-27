@@ -24,7 +24,6 @@
  *     <li> To be able to graph just a subset of your infraestructure
  *            (just one organization, vDC, vShield Edge, vApp or VM
  *             and all of it's objects downwards).
- *     <li> Set different color to each type of entity
  *   </ul>
  *
  * @author Angel Galindo Muñoz (zoquero at gmail dot com)
@@ -570,23 +569,16 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fwrite($fp, "    " . VseNetwork::$classDisplayName     . " -> " . StorageProfile::$classDisplayName . " [style=invis]" . PHP_EOL);
   fwrite($fp, "    " . StorageProfile::$classDisplayName . " -> " . Vapp::$classDisplayName           . " [style=invis]" . PHP_EOL);
   fwrite($fp, "    " . Vapp::$classDisplayName           . " -> " . VM::$classDisplayName                                . PHP_EOL);
-
-
-  fwrite($fp, ""                                                . PHP_EOL);
-
+  fwrite($fp, ""                                               . PHP_EOL);
+  fwrite($fp, getNodeLegend(Org::$classDisplayName)            . PHP_EOL);
+  fwrite($fp, getNodeLegend(Vdc::$classDisplayName)            . PHP_EOL);
+  fwrite($fp, getNodeLegend(Vse::$classDisplayName)            . PHP_EOL);
+  fwrite($fp, getNodeLegend(VseNetwork::$classDisplayName)     . PHP_EOL);
+  fwrite($fp, getNodeLegend(StorageProfile::$classDisplayName) . PHP_EOL);
+  fwrite($fp, getNodeLegend(Vapp::$classDisplayName)           . PHP_EOL);
+  fwrite($fp, getNodeLegend(VM::$classDisplayName)             . PHP_EOL);
 
 /*
-TO_DO: Convert it to : ...
-  fwrite($fp, getNodeLegend("Org") . PHP_EOL);
-  fwrite($fp, getNodeLegend("Org") . PHP_EOL);
-  fwrite($fp, getNodeLegend("Vdc") . PHP_EOL);
-  fwrite($fp, getNodeLegend("Vse") . PHP_EOL);
-  fwrite($fp, getNodeLegend("VseNetwork") . PHP_EOL);
-  fwrite($fp, getNodeLegend("StorageProfile") . PHP_EOL);
-  fwrite($fp, getNodeLegend("Vapp") . PHP_EOL);
-  fwrite($fp, getNodeLegend("VM") . PHP_EOL);
-*/
-
   fwrite($fp, "    Org      [shape=". getNodeShape("Org")            . ",style=filled,fillcolor=\"" . getNodeColor("Org") . "\"];" . PHP_EOL);
   fwrite($fp, "    vDC      [shape=". getNodeShape("Vdc")            . ",style=filled,fillcolor=\"" . getNodeColor("Vdc")  . "\"];" . PHP_EOL);
   fwrite($fp, "    vSE      [shape=". getNodeShape("Vse")            . ",style=filled,fillcolor=\"" . getNodeColor("Vse")  . "\"];" . PHP_EOL);
@@ -594,6 +586,7 @@ TO_DO: Convert it to : ...
   fwrite($fp, "    StorProf [shape=". getNodeShape("StorageProfile") . ",style=filled,fillcolor=\"" . getNodeColor("StorageProfile")  . "\"];" . PHP_EOL);
   fwrite($fp, "    vApp     [shape=". getNodeShape("Vapp")           . ",style=filled,fillcolor=\"" . getNodeColor("Vapp")  . "\"];" . PHP_EOL);
   fwrite($fp, "    VM       [shape=". getNodeShape("VM")             . ",style=filled,fillcolor=\"" . getNodeColor("VM")   . "\"];" . PHP_EOL);
+*/
   fwrite($fp, "  }"                                             . PHP_EOL);
 
   ###################
@@ -602,7 +595,8 @@ TO_DO: Convert it to : ...
 
   fwrite($fp, "  # Orgs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=". getNodeShape("Org") . ",style=filled,fillcolor=\"". getNodeColor("Org") . "\"];" . PHP_EOL);
+# fwrite($fp, "    node [shape=". getNodeShape("Org") . ",style=filled,fillcolor=\"". getNodeColor("Org") . "\"];" . PHP_EOL);
+  fwrite($fp, getNodeGroupPreamble(Org::$classDisplayName) . PHP_EOL);
   foreach($orgs as $aNode) {
     printNode($fp, $aNode);
   }
@@ -610,7 +604,8 @@ TO_DO: Convert it to : ...
 
   fwrite($fp, "  # vDCs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=". getNodeShape("Vdc") . ",style=filled,fillcolor=\"". getNodeColor("Vdc") . "\"];" . PHP_EOL);
+# fwrite($fp, "    node [shape=". getNodeShape("Vdc") . ",style=filled,fillcolor=\"". getNodeColor("Vdc") . "\"];" . PHP_EOL);
+  fwrite($fp, getNodeGroupPreamble(Vdc::$classDisplayName) . PHP_EOL);
   foreach($vdcs as $aNode) {
     printNode($fp, $aNode);
   }
@@ -618,7 +613,8 @@ TO_DO: Convert it to : ...
 
   fwrite($fp, "  # vSEs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=". getNodeShape("Vse") . ",style=filled,fillcolor=\"". getNodeColor("Vse") . "\"];" . PHP_EOL);
+# fwrite($fp, "    node [shape=". getNodeShape("Vse") . ",style=filled,fillcolor=\"". getNodeColor("Vse") . "\"];" . PHP_EOL);
+  fwrite($fp, getNodeGroupPreamble(Vse::$classDisplayName) . PHP_EOL);
   foreach($vses as $aNode) {
     printNode($fp, $aNode);
   }
@@ -626,7 +622,8 @@ TO_DO: Convert it to : ...
 
   fwrite($fp, "  # vSE Networks"                             . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=". getNodeShape("VseNetwork") . ",style=filled,fillcolor=\"". getNodeColor("VseNetwork") . "\"];" . PHP_EOL);
+# fwrite($fp, "    node [shape=". getNodeShape("VseNetwork") . ",style=filled,fillcolor=\"". getNodeColor("VseNetwork") . "\"];" . PHP_EOL);
+  fwrite($fp, getNodeGroupPreamble(VseNetwork::$classDisplayName) . PHP_EOL);
   foreach($vseNets as $aNode) {
     printNode($fp, $aNode);
   }
@@ -635,7 +632,8 @@ TO_DO: Convert it to : ...
   # $isolatedNets
   fwrite($fp, "  # Isolated Networks"                        . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=". getNodeShape("IsolatedNetwork") . ",style=filled,fillcolor=\"". getNodeColor("IsolatedNetwork") . "\"];" . PHP_EOL);
+# fwrite($fp, "    node [shape=". getNodeShape("IsolatedNetwork") . ",style=filled,fillcolor=\"". getNodeColor("IsolatedNetwork") . "\"];" . PHP_EOL);
+  fwrite($fp, getNodeGroupPreamble(IsolatedNetwork::$classDisplayName) . PHP_EOL);
   foreach($isolatedNets as $aNode) {
     printNode($fp, $aNode);
   }
@@ -643,7 +641,8 @@ TO_DO: Convert it to : ...
 
   fwrite($fp, "  # Storage Profiles"                         . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=". getNodeShape("StorageProfile") . ",style=filled,fillcolor=\"". getNodeColor("StorageProfile") . "\"];" . PHP_EOL);
+# fwrite($fp, "    node [shape=". getNodeShape("StorageProfile") . ",style=filled,fillcolor=\"". getNodeColor("StorageProfile") . "\"];" . PHP_EOL);
+  fwrite($fp, getNodeGroupPreamble(StorageProfile::$classDisplayName) . PHP_EOL);
   foreach($storProfs as $aNode) {
     printNode($fp, $aNode);
   }
@@ -651,7 +650,8 @@ TO_DO: Convert it to : ...
 
   fwrite($fp, "  # vApps"                                    . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=". getNodeShape("Vapp") . ",style=filled,fillcolor=\"". getNodeColor("Vapp") . "\"];" . PHP_EOL);
+# fwrite($fp, "    node [shape=". getNodeShape("Vapp") . ",style=filled,fillcolor=\"". getNodeColor("Vapp") . "\"];" . PHP_EOL);
+  fwrite($fp, getNodeGroupPreamble(Vapp::$classDisplayName) . PHP_EOL);
   foreach($vapps as $aNode) {
     printNode($fp, $aNode);
   }
@@ -659,7 +659,8 @@ TO_DO: Convert it to : ...
 
   fwrite($fp, "  # VMs"                                      . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=". getNodeShape("VM") . ",style=filled,fillcolor=\"". getNodeColor("VM") . "\"];" . PHP_EOL);
+# fwrite($fp, "    node [shape=". getNodeShape("VM") . ",style=filled,fillcolor=\"". getNodeColor("VM") . "\"];" . PHP_EOL);
+  fwrite($fp, getNodeGroupPreamble(VM::$classDisplayName) . PHP_EOL);
   foreach($vms as $aNode) {
     printNode($fp, $aNode);
   }
@@ -727,33 +728,37 @@ function getNodeLegend($nodeType) {
   return "    " . $nodeType . " [shape=". getNodeShape($nodeType) . ",style=filled,fillcolor=\"" . getNodeColor($nodeType) . "\"];";
 }
 
+function getNodeGroupPreamble($nodeType) {
+  return "    node [shape=". getNodeShape($nodeType) . ",style=filled,fillcolor=\"". getNodeColor($nodeType) . "\"];";
+}
+
 function getNodeShape($nodeType) {
-  if($nodeType      == "Org") {
+  if($nodeType      == Org::$classDisplayName) {
     return SHAPE4ORG;
   }
-  else if($nodeType == "Vdc") {
+  else if($nodeType == Vdc::$classDisplayName) {
     return SHAPE4VDC;
   }
-  else if($nodeType == "Vse") {
+  else if($nodeType == Vse::$classDisplayName) {
     return SHAPE4VSE;
   }
-  else if($nodeType == "VseNetwork") {
+  else if($nodeType == VseNetwork::$classDisplayName) {
     return SHAPE4NET1;
   }
-  else if($nodeType == "IsolatedNetwork") {
+  else if($nodeType == IsolatedNetwork::$classDisplayName) {
     return SHAPE4NET2;
   }
-  else if($nodeType == "Vapp") {
+  else if($nodeType == Vapp::$classDisplayName) {
     return SHAPE4VAP;
   }
-  else if($nodeType == "VM") {
+  else if($nodeType == VM::$classDisplayName) {
     return SHAPE4VM;
   }
-  else if($nodeType == "StorageProfile") {
+  else if($nodeType == StorageProfile::$classDisplayName) {
     return SHAPE4STO;
   }
   else {
-    die("Missing legend for " . $nodeType);
+    die("Missing shape for " . $nodeType);
   }
 }
 
@@ -836,28 +841,28 @@ function printNode($fp, $obj) {
 }
 
 function getNodeColor($nodeType) {
-  if($nodeType == "Org") {
+  if($nodeType      == Org::$classDisplayName) {
     return COLOR4ORG;
   }
-  else if($nodeType == "Vdc") {
+  else if($nodeType == Vdc::$classDisplayName) {
     return COLOR4VDC;
   }
-  else if($nodeType == "Vse") {
+  else if($nodeType == Vse::$classDisplayName) {
     return COLOR4VSE;
   }
-  else if($nodeType == "VseNetwork") {
+  else if($nodeType == VseNetwork::$classDisplayName) {
     return COLOR4NET1;
   }
-  else if($nodeType == "IsolatedNetwork") {
+  else if($nodeType == IsolatedNetwork::$classDisplayName) {
     return COLOR4NET2;
   }
-  else if($nodeType == "Vapp") {
+  else if($nodeType == Vapp::$classDisplayName) {
     return COLOR4VAP;
   }
-  else if($nodeType == "VM") {
+  else if($nodeType == VM::$classDisplayName) {
     return COLOR4VM;
   }
-  else if($nodeType == "StorageProfile") {
+  else if($nodeType == StorageProfile::$classDisplayName) {
     return COLOR4STO;
   }
   else {

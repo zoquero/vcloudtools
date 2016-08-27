@@ -119,7 +119,7 @@ class VseNetwork {
  * An Isolated Network
  */
 class IsolatedNetwork {
-  public static $classDisplayName  = 'Network';
+  public static $classDisplayName  = 'IsolatedNetwork';
   public $parent = ''; # Usefull for graph
   public $name   = '';
   public $id     = ''; # Can't find it, we will use "name"
