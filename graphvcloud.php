@@ -66,14 +66,24 @@ $doPrintVdc2VappLinks   = false;
 $doPrintVdc2VmLinks     = false;
 $doPrintVmStorProfLinks = true;
 $rankDir="BT";                   # LR RL BT TB"
+# Colors taken from http://www.color-hex.com/color-palettes/popular.php
 define("COLOR4ORG",  "#f5f5f5");
 define("COLOR4VDC",  "#ffb3ba");
 define("COLOR4VSE",  "#ffdfba");
-define("COLOR4NET1", "#ffffba");
-define("COLOR4NET2", "#e5e5a0");
+define("COLOR4NET1", "#ffffba"); /* vShield Edge Network */
+define("COLOR4NET2", "#e5e5a0"); /* Isolated Network */
 define("COLOR4STO",  "#baffc9");
 define("COLOR4VAP",  "#bae1ff");
 define("COLOR4VM",   "#4dffb8");
+# Shapes for nodes
+define("SHAPE4ORG",  "house");
+define("SHAPE4VDC",  "invhouse");
+define("SHAPE4VSE",  "doublecircle");
+define("SHAPE4NET1", "parallelogram"); /* vShield Edge Network */
+define("SHAPE4NET2", "parallelogram"); /* Isolated Network */
+define("SHAPE4STO",  "circle");
+define("SHAPE4VAP",  "Msquare");
+define("SHAPE4VM",   "box");
 
 
 // Initialize parameters
@@ -552,13 +562,13 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fwrite($fp, "    StorProf -> vApp [style=invis]"              . PHP_EOL);
   fwrite($fp, "    vApp -> VM"                                  . PHP_EOL);
   fwrite($fp, ""                                                . PHP_EOL);
-  fwrite($fp, "    org      [shape=house,style=filled,fillcolor=\""         . COLOR4ORG  . "\"];" . PHP_EOL);
-  fwrite($fp, "    vDC      [shape=invhouse,style=filled,fillcolor=\""      . COLOR4VDC  . "\"];" . PHP_EOL);
-  fwrite($fp, "    vSE      [shape=doublecircle,style=filled,fillcolor=\""  . COLOR4VSE  . "\"];" . PHP_EOL);
-  fwrite($fp, "    network  [shape=parallelogram,style=filled,fillcolor=\"" . COLOR4NET1 . "\"];" . PHP_EOL);
-  fwrite($fp, "    StorProf [shape=circle,style=filled,fillcolor=\""        . COLOR4STO  . "\"];" . PHP_EOL);
-  fwrite($fp, "    vApp     [shape=Msquare,style=filled,fillcolor=\""       . COLOR4VAP  . "\"];" . PHP_EOL);
-  fwrite($fp, "    VM       [shape=box,style=filled,fillcolor=\""           . COLOR4VM   . "\"];" . PHP_EOL);
+  fwrite($fp, "    org      [shape=". getNodeShape("Org")            . ",style=filled,fillcolor=\"" . getNodeColor("Org") . "\"];" . PHP_EOL);
+  fwrite($fp, "    vDC      [shape=". getNodeShape("Vdc")            . ",style=filled,fillcolor=\"" . getNodeColor("Vdc")  . "\"];" . PHP_EOL);
+  fwrite($fp, "    vSE      [shape=". getNodeShape("Vse")            . ",style=filled,fillcolor=\"" . getNodeColor("Vse")  . "\"];" . PHP_EOL);
+  fwrite($fp, "    network  [shape=". getNodeShape("VseNetwork")     . ",style=filled,fillcolor=\"" . getNodeColor("VseNetwork") . "\"];" . PHP_EOL);
+  fwrite($fp, "    StorProf [shape=". getNodeShape("StorageProfile") . ",style=filled,fillcolor=\"" . getNodeColor("StorageProfile")  . "\"];" . PHP_EOL);
+  fwrite($fp, "    vApp     [shape=". getNodeShape("Vapp")           . ",style=filled,fillcolor=\"" . getNodeColor("Vapp")  . "\"];" . PHP_EOL);
+  fwrite($fp, "    VM       [shape=". getNodeShape("VM")             . ",style=filled,fillcolor=\"" . getNodeColor("VM")   . "\"];" . PHP_EOL);
   fwrite($fp, "  }"                                             . PHP_EOL);
 
   ###################
@@ -567,7 +577,7 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # Orgs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=house];"                      . PHP_EOL);
+  fwrite($fp, "    node [shape=". getNodeShape("Org") . ",style=filled,fillcolor=\"". getNodeColor("Org") . "\"];" . PHP_EOL);
   foreach($orgs as $aNode) {
     printNode($fp, $aNode);
   }
@@ -575,7 +585,7 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # vDCs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=invhouse];"                   . PHP_EOL);
+  fwrite($fp, "    node [shape=". getNodeShape("Vdc") . ",style=filled,fillcolor=\"". getNodeColor("Vdc") . "\"];" . PHP_EOL);
   foreach($vdcs as $aNode) {
     printNode($fp, $aNode);
   }
@@ -583,7 +593,7 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # vSEs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=doublecircle];"               . PHP_EOL);
+  fwrite($fp, "    node [shape=". getNodeShape("Vse") . ",style=filled,fillcolor=\"". getNodeColor("Vse") . "\"];" . PHP_EOL);
   foreach($vses as $aNode) {
     printNode($fp, $aNode);
   }
@@ -591,7 +601,7 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # vSE Networks"                             . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=parallelogram];"              . PHP_EOL);
+  fwrite($fp, "    node [shape=". getNodeShape("VseNetwork") . ",style=filled,fillcolor=\"". getNodeColor("VseNetwork") . "\"];" . PHP_EOL);
   foreach($vseNets as $aNode) {
     printNode($fp, $aNode);
   }
@@ -600,7 +610,7 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   # $isolatedNets
   fwrite($fp, "  # Isolated Networks"                        . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=parallelogram,style=filled,fillcolor=\"". COLOR4NET2 . "\"];" . PHP_EOL);
+  fwrite($fp, "    node [shape=". getNodeShape("IsolatedNetwork") . ",style=filled,fillcolor=\"". getNodeColor("IsolatedNetwork") . "\"];" . PHP_EOL);
   foreach($isolatedNets as $aNode) {
     printNode($fp, $aNode);
   }
@@ -608,7 +618,7 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # Storage Profiles"                         . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=circle];"                     . PHP_EOL);
+  fwrite($fp, "    node [shape=". getNodeShape("StorageProfile") . ",style=filled,fillcolor=\"". getNodeColor("StorageProfile") . "\"];" . PHP_EOL);
   foreach($storProfs as $aNode) {
     printNode($fp, $aNode);
   }
@@ -616,7 +626,7 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # vApps"                                    . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=Msquare];"                    . PHP_EOL);
+  fwrite($fp, "    node [shape=". getNodeShape("Vapp") . ",style=filled,fillcolor=\"". getNodeColor("Vapp") . "\"];" . PHP_EOL);
   foreach($vapps as $aNode) {
     printNode($fp, $aNode);
   }
@@ -624,7 +634,7 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # VMs"                                      . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-  fwrite($fp, "    node [shape=box];"                        . PHP_EOL);
+  fwrite($fp, "    node [shape=". getNodeShape("VM") . ",style=filled,fillcolor=\"". getNodeColor("VM") . "\"];" . PHP_EOL);
   foreach($vms as $aNode) {
     printNode($fp, $aNode);
   }
@@ -687,6 +697,39 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fclose($fp) || die ("Can't close output file");
 
 }
+
+function getNodeShape($nodeType) {
+  if($nodeType      == "Org") {
+    return SHAPE4ORG;
+  }
+  else if($nodeType == "Vdc") {
+    return SHAPE4VDC;
+  }
+  else if($nodeType == "Vse") {
+    return SHAPE4VSE;
+  }
+  else if($nodeType == "VseNetwork") {
+    return SHAPE4NET1;
+  }
+  else if($nodeType == "IsolatedNetwork") {
+    return SHAPE4NET2;
+  }
+  else if($nodeType == "Vapp") {
+    return SHAPE4VAP;
+  }
+  else if($nodeType == "VM") {
+    return SHAPE4VM;
+  }
+  else if($nodeType == "StorageProfile") {
+    return SHAPE4STO;
+  }
+  else {
+    die("Missing shape for " . $nodeType);
+  }
+}
+
+
+
 
 /**
  * Generates Edges pointing to an object when generating a GraphViz diagram
@@ -758,37 +801,38 @@ function getStorProfIdFromName($storProf, &$storProfs) {
  */
 function printNode($fp, $obj) {
     $id=simplifyString($obj->id);
-    fwrite($fp, "    \"$id\" [label=\"" . $obj->name . "\",style=filled,fillcolor=\"" . getNodeColor($obj) . "\"]" . PHP_EOL);
+#   fwrite($fp, "    \"$id\" [label=\"" . $obj->name . "\",style=filled,fillcolor=\"" . getNodeColor($obj) . "\"]" . PHP_EOL);
+    fwrite($fp, "    \"$id\" [label=\"" . $obj->name . "\"]" . PHP_EOL);
     fwrite($fp, "    rank = same; " . $obj::$classDisplayName . "; \"$id\";" . PHP_EOL);
 }
 
-function getNodecolor($obj) {
-  if(get_class($obj)      === "Org") {
+function getNodeColor($nodeType) {
+  if($nodeType == "Org") {
     return COLOR4ORG;
   }
-  else if(get_class($obj) === "Vdc") {
+  else if($nodeType == "Vdc") {
     return COLOR4VDC;
   }
-  else if(get_class($obj) === "Vse") {
+  else if($nodeType == "Vse") {
     return COLOR4VSE;
   }
-  else if(get_class($obj) === "VseNetwork") {
+  else if($nodeType == "VseNetwork") {
     return COLOR4NET1;
   }
-  else if(get_class($obj) === "IsolatedNetwork") {
+  else if($nodeType == "IsolatedNetwork") {
     return COLOR4NET2;
   }
-  else if(get_class($obj) === "Vapp") {
+  else if($nodeType == "Vapp") {
     return COLOR4VAP;
   }
-  else if(get_class($obj) === "VM") {
+  else if($nodeType == "VM") {
     return COLOR4VM;
   }
-  else if(get_class($obj) === "StorageProfile") {
+  else if($nodeType == "StorageProfile") {
     return COLOR4STO;
   }
   else {
-    die("Missing color for " . get_class($obj) . " object");
+    die("Missing color for " . $nodeType);
   }
 }
 
