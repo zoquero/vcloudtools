@@ -1,5 +1,5 @@
 #
-# Graph genated on 2016/08/24 01:32:33 pm
+# Graph genated on 2016/08/28 12:46:08 pm
 # by vcloudtools:
 # https://github.com/zoquero/vcloudtools
 #
@@ -9,99 +9,132 @@ digraph vCloud {
   splines=false; # avoid curve lines
   edge [arrowhead=none,arrowtail=none];
   {
-    node [style=filled, fillcolor="#C0C0C0"];
-    org -> vDC -> vSE -> network -> vApp -> VM
+    Org -> vDC
+    vDC -> vSE
+    vSE -> Network
+    Network -> StorProf [style=invis]
+    StorProf -> vApp [style=invis]
+    vApp -> VM
 
-    org     [shape=house];
-    vDC     [shape=invhouse];
-    vSE     [shape=doublecircle];
-    network [shape=parallelogram];
-    vApp    [shape=Msquare];
-    VM      [shape=box];
+    Org [shape=house,style=filled,fillcolor="#f5f5f5"];
+    vDC [shape=invhouse,style=filled,fillcolor="#ffb3ba"];
+    vSE [shape=doublecircle,style=filled,fillcolor="#ffdfba"];
+    Network [shape=parallelogram,style=filled,fillcolor="#ffffba"];
+    StorProf [shape=circle,style=filled,fillcolor="#baffc9"];
+    vApp [shape=Msquare,style=filled,fillcolor="#bae1ff"];
+    VM [shape=box,style=filled,fillcolor="#4dffb8"];
   }
   # Orgs
   {
-    node [shape=house];
-    "Org1" [label="Main org"]
-    "Org2" [label="Other org"]
-    rank = same; org; "Org1";
-    rank = same; org; "Org2";
+    node [shape=house,style=filled,fillcolor="#f5f5f5"];
+    "Org1" [label="Org1"]
+    rank = same; Org; "Org1";
+    "Org2" [label="Org2"]
+    rank = same; Org; "Org2";
   }
   # vDCs
   {
-    node [shape=invhouse];
-    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1" [label="First VDC for Org1"]
-    rank = same; vDC; "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1";
-    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_928ad3f28482" [label="First VDC for Org2"]
-    rank = same; vDC; "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_928ad3f28482";
+    node [shape=invhouse,style=filled,fillcolor="#ffb3ba"];
+    "Vdc1" [label="Vdc1"]
+    rank = same; vDC; "Vdc1";
+    "Vdc2" [label="Vdc2"]
+    rank = same; vDC; "Vdc2";
+    "Calculus" [label="Calculus"]
+    rank = same; vDC; "Calculus";
   }
   # vSEs
   {
-    node [shape=doublecircle];
-    "urn_vcloud_gateway_99a8652b_f8e5_4322_842a_83jafb882ae1" [label="Vshield_2"]
-    rank = same; vSE; "urn_vcloud_gateway_99a8652b_f8e5_4322_842a_83jafb882ae1";
-    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c" [label="Vshield_1"]
-    rank = same; vSE; "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c";
-    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05d" [label="Vshield for Org2"]
-    rank = same; vSE; "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05d";
+    node [shape=doublecircle,style=filled,fillcolor="#ffdfba"];
+    "Vse1" [label="Vse1"]
+    rank = same; vSE; "Vse1";
+    "Vse2" [label="Vse2"]
+    rank = same; vSE; "Vse2";
+    "Vse3" [label="Vse3"]
+    rank = same; vSE; "Vse3";
+    "Vse4" [label="Vse4"]
+    rank = same; vSE; "Vse4";
   }
   # vSE Networks
   {
-    node [shape=parallelogram];
-    "TESTNET2" [label="TESTNET2"]
-    rank = same; network; "TESTNET2";
-    "External network 1" [label="External network 1"]
-    rank = same; network; "External network 1";
-    "External network 1" [label="External network 1"]
-    rank = same; network; "External network 1";
-    "TESTNET0" [label="TESTNET0"]
-    rank = same; network; "TESTNET0";
-    "TESTNET1" [label="TESTNET1"]
-    rank = same; network; "TESTNET1";
-    "TESTNET9" [label="TESTNET9"]
-    rank = same; network; "TESTNET9";
-    "TESTNET8" [label="TESTNET8"]
-    rank = same; network; "TESTNET8";
+    node [shape=parallelogram,style=filled,fillcolor="#ffffba"];
+    "Net1" [label="Net1"]
+    rank = same; Network; "Net1";
+    "Net2" [label="Net2"]
+    rank = same; Network; "Net2";
+    "Net3" [label="Net3"]
+    rank = same; Network; "Net3";
+    "Mail Net" [label="Mail Net"]
+    rank = same; Network; "Mail Net";
+    "CalcNet" [label="CalcNet"]
+    rank = same; Network; "CalcNet";
+    "CalcManNet" [label="CalcManNet"]
+    rank = same; Network; "CalcManNet";
   }
   # Isolated Networks
   {
-    node [shape=parallelogram,style=filled,fillcolor="#C0C0C0"];
-    "TESTNET3" [label="TESTNET3"]
-    rank = same; network; "TESTNET3";
+    node [shape=parallelogram,style=filled,fillcolor="#e5e5a0"];
+  }
+  # Storage Profiles
+  {
+    node [shape=circle,style=filled,fillcolor="#baffc9"];
+    "storProf1" [label="storProf1"]
+    rank = same; StorProf; "storProf1";
+    "storProf2" [label="storProf2"]
+    rank = same; StorProf; "storProf2";
+    "storProf3" [label="storProf3"]
+    rank = same; StorProf; "storProf3";
+    "calcStorProf" [label="calcStorProf"]
+    rank = same; StorProf; "calcStorProf";
   }
   # vApps
   {
-    node [shape=Msquare];
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076" [label="vApp_FE"]
-    rank = same; vApp; "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076";
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077" [label="vApp_BE"]
-    rank = same; vApp; "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077";
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667078" [label="vApp_Mon"]
-    rank = same; vApp; "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667078";
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667079" [label="Management"]
-    rank = same; vApp; "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667079";
+    node [shape=Msquare,style=filled,fillcolor="#bae1ff"];
+    "vApp1_FE" [label="vApp1_FE"]
+    rank = same; vApp; "vApp1_FE";
+    "vApp2_BE" [label="vApp2_BE"]
+    rank = same; vApp; "vApp2_BE";
+    "monitoring" [label="Monitoring"]
+    rank = same; vApp; "monitoring";
+    "Mail" [label="Mail"]
+    rank = same; vApp; "Mail";
+    "Calc vApp" [label="Calc vApp"]
+    rank = same; vApp; "Calc vApp";
+    "Calc Manag vApp" [label="Calc Manag vApp"]
+    rank = same; vApp; "Calc Manag vApp";
   }
   # VMs
   {
-    node [shape=box];
-    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a0" [label="TEST_VM_02"]
-    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a0";
-    "urn_vcloud_vm_40a34d05_bc27_455b_ba0b_576bd99e14d3" [label="TEST_VM_01"]
-    rank = same; VM; "urn_vcloud_vm_40a34d05_bc27_455b_ba0b_576bd99e14d3";
-    "urn_vcloud_vm_0ccae7ba_1585_443d_8091_3c5d02bc5ffe" [label="TEST_VM_03"]
-    rank = same; VM; "urn_vcloud_vm_0ccae7ba_1585_443d_8091_3c5d02bc5ffe";
-    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a1" [label="TEST_BE_01"]
-    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a1";
-    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a2" [label="TEST_BE_02"]
-    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a2";
-    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a3" [label="TEST_MON_01"]
-    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a3";
-    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a4" [label="TEST_MON_02"]
-    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a4";
-    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a5" [label="Conf Manager"]
-    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a5";
-    "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a6" [label="Accounting"]
-    rank = same; VM; "urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a6";
+    node [shape=box,style=filled,fillcolor="#4dffb8"];
+    "vm1" [label="vm1"]
+    rank = same; VM; "vm1";
+    "vm2" [label="vm2"]
+    rank = same; VM; "vm2";
+    "vm3" [label="vm3"]
+    rank = same; VM; "vm3";
+    "vm4" [label="vm4"]
+    rank = same; VM; "vm4";
+    "vm5" [label="vm5"]
+    rank = same; VM; "vm5";
+    "monitor1" [label="monitor1"]
+    rank = same; VM; "monitor1";
+    "monitor2" [label="monitor2"]
+    rank = same; VM; "monitor2";
+    "Webmail" [label="Webmail"]
+    rank = same; VM; "Webmail";
+    "MTA" [label="MTA"]
+    rank = same; VM; "MTA";
+    "Mailbox Server" [label="Mailbox Server"]
+    rank = same; VM; "Mailbox Server";
+    "Grid 01" [label="Grid 01"]
+    rank = same; VM; "Grid 01";
+    "Grid 02" [label="Grid 02"]
+    rank = same; VM; "Grid 02";
+    "Grid 03" [label="Grid 03"]
+    rank = same; VM; "Grid 03";
+    "Grid 04" [label="Grid 04"]
+    rank = same; VM; "Grid 04";
+    "Calc Manager" [label="Calc Manager"]
+    rank = same; VM; "Calc Manager";
   }
   #
   # Edges
@@ -109,47 +142,82 @@ digraph vCloud {
 
   # Org edges:
   # vDC edges:
-    "Org1":n->"urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1":s;
-    "Org2":n->"urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_928ad3f28482":s;
+    "Org1":n->"Vdc1":s;
+    "Org1":n->"Vdc2":s;
+    "Org2":n->"Calculus":s;
   # vSE edges:
-    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1":n->"urn_vcloud_gateway_99a8652b_f8e5_4322_842a_83jafb882ae1":s;
-    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1":n->"urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c":s;
-    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_928ad3f28482":n->"urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05d":s;
+    "Vdc1":n->"Vse1":s;
+    "Vdc2":n->"Vse2":s;
+    "Calculus":n->"Vse3":s;
+    "Calculus":n->"Vse4":s;
   # vSE Network edges:
-    "urn_vcloud_gateway_99a8652b_f8e5_4322_842a_83jafb882ae1":n->"TESTNET2":s;
-    "urn_vcloud_gateway_99a8652b_f8e5_4322_842a_83jafb882ae1":n->"External network 1":s;
-    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c":n->"External network 1":s;
-    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c":n->"TESTNET0":s;
-    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05c":n->"TESTNET1":s;
-    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05d":n->"TESTNET9":s;
-    "urn_vcloud_gateway_a92eb7a6_bbcb_405a_8d55_3ce5704ec05d":n->"TESTNET8":s;
+    "Vse1":n->"Net1":s;
+    "Vse1":n->"Net2":s;
+    "Vse1":n->"Net3":s;
+    "Vse2":n->"Mail Net":s;
+    "Vse3":n->"CalcNet":s;
+    "Vse4":n->"CalcManNet":s;
   # Isolated Network edges:
-    "urn_vcloud_vdc_ce6249ef_6ac0_49e8_a113_73829ad743a1":n->"TESTNET3":s [style="dotted"];
+  # Storage Profiles:
+    "Vdc1":n->"storProf1":s;
+    "Vdc1":n->"storProf2":s;
+    "Vdc2":n->"storProf3":s;
+    "Calculus":n->"calcStorProf":s;
   # vApp edges:
-    "TESTNET1":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":s;
-    "TESTNET3":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":s;
-    "TESTNET0":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":s;
-    "TESTNET1":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077":s;
-    "TESTNET2":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077":s;
-    "TESTNET9":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667078":s;
-    "TESTNET8":n->"urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667079":s;
+    "Net1":n->"vApp1_FE":s;
+    "Net1":n->"vApp2_BE":s;
+    "Net2":n->"vApp2_BE":s;
+    "Net3":n->"monitoring":s;
+    "Mail Net":n->"Mail":s;
+    "CalcNet":n->"Calc vApp":s;
+    "CalcManNet":n->"Calc Manag vApp":s;
   # VM edges:
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a0":s;
-    "TESTNET0":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a0":s;
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":n->"urn_vcloud_vm_40a34d05_bc27_455b_ba0b_576bd99e14d3":s;
-    "TESTNET0":n->"urn_vcloud_vm_40a34d05_bc27_455b_ba0b_576bd99e14d3":s;
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667076":n->"urn_vcloud_vm_0ccae7ba_1585_443d_8091_3c5d02bc5ffe":s;
-    "TESTNET0":n->"urn_vcloud_vm_0ccae7ba_1585_443d_8091_3c5d02bc5ffe":s;
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a1":s;
-    "TESTNET0":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a1":s;
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667077":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a2":s;
-    "TESTNET0":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a2":s;
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667078":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a3":s;
-    "TESTNET9":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a3":s;
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667078":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a4":s;
-    "TESTNET9":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a4":s;
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667079":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a5":s;
-    "TESTNET9":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a5":s;
-    "urn_vcloud_vapp_82bc2974_aad1_4f38_8f10_0aab9c667079":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a6":s;
-    "TESTNET8":n->"urn_vcloud_vm_3e1bf41f_cb70_4258_92f5_386f22cc11a6":s;
+    "vApp1_FE":n->"vm1":s;
+    "Net1":n->"vm1":s;
+    "storProf1":n->"vm1":s;
+    "vApp1_FE":n->"vm2":s;
+    "Net1":n->"vm2":s;
+    "storProf1":n->"vm2":s;
+    "vApp1_FE":n->"vm3":s;
+    "Net1":n->"vm3":s;
+    "storProf1":n->"vm3":s;
+    "vApp2_BE":n->"vm4":s;
+    "Net1":n->"vm4":s;
+    "Net2":n->"vm4":s;
+    "storProf1":n->"vm4":s;
+    "vApp2_BE":n->"vm5":s;
+    "Net1":n->"vm5":s;
+    "Net2":n->"vm5":s;
+    "storProf1":n->"vm5":s;
+    "monitoring":n->"monitor1":s;
+    "Net3":n->"monitor1":s;
+    "storProf2":n->"monitor1":s;
+    "monitoring":n->"monitor2":s;
+    "Net3":n->"monitor2":s;
+    "storProf2":n->"monitor2":s;
+    "Mail":n->"Webmail":s;
+    "Mail Net":n->"Webmail":s;
+    "storProf3":n->"Webmail":s;
+    "Mail":n->"MTA":s;
+    "Mail Net":n->"MTA":s;
+    "storProf3":n->"MTA":s;
+    "Mail":n->"Mailbox Server":s;
+    "Mail Net":n->"Mailbox Server":s;
+    "storProf3":n->"Mailbox Server":s;
+    "Calc vApp":n->"Grid 01":s;
+    "CalcNet":n->"Grid 01":s;
+    "calcStorProf":n->"Grid 01":s;
+    "Calc vApp":n->"Grid 02":s;
+    "CalcNet":n->"Grid 02":s;
+    "calcStorProf":n->"Grid 02":s;
+    "Calc vApp":n->"Grid 03":s;
+    "CalcNet":n->"Grid 03":s;
+    "calcStorProf":n->"Grid 03":s;
+    "Calc vApp":n->"Grid 04":s;
+    "CalcNet":n->"Grid 04":s;
+    "calcStorProf":n->"Grid 04":s;
+    "Calc Manag vApp":n->"Calc Manager":s;
+    "CalcNet":n->"Calc Manager":s;
+    "CalcManNet":n->"Calc Manager":s;
+    "calcStorProf":n->"Calc Manager":s;
 }
