@@ -47,6 +47,24 @@ zoquero at gmail dot com
      # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --dir /tmp/vc
 ```
 
+## graphcloud.demo.php
+Generates a GraphViz diagram representing a demo of a vCloud Infraestructure. Usefull for generating arbitrary diagrams, for design.
+
+### Usage
+```
+  [Description]
+     Generates a GraphViz diagram representing a demo of a vCloud Infraestructure.
+
+  [Usage]
+     # php graphvcloud.demo.php --output <file>
+     # php graphvcloud.demo.php -o <file>
+
+     -o|--output <file>               [req] Folder where CSVs will be craeted.
+
+  [Examples]
+     # php graphvcloud.demo.php --output /tmp/vc.dot
+```
+
 ## exportvcloud.php
 **Dumps** to CSV or XML all the entities (vApps, VMs,  vShields, vDCs and organizations) that you have access to.
 
