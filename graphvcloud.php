@@ -831,15 +831,21 @@ function getStorProfIdFromName($storProf, &$storProfs) {
  * Generates node entry of an object when generating a GraphViz diagram
  *
  * @param $fp File Handler to write to
- * @param $obj The object that has non-null "id" and "name" fields and a static field "classDisplayName".
+ * @param $obj The String that equals to the static field "classDisplayName" of object's class.
  */
 function printNode($fp, $obj) {
     $id=simplifyString($obj->id);
 #   fwrite($fp, "    \"$id\" [label=\"" . $obj->name . "\",style=filled,fillcolor=\"" . getNodeColor($obj) . "\"]" . PHP_EOL);
     fwrite($fp, "    \"$id\" [label=\"" . $obj->name . "\"]" . PHP_EOL);
-    fwrite($fp, "    rank = same; " . $obj::$classDisplayName . "; \"$id\";" . PHP_EOL);
+#   fwrite($fp, "    rank = same; " . $obj::$classDisplayName . "; \"$id\";" . PHP_EOL);
+    fwrite($fp, "    rank = same; " . getNodeAlign($obj::$classDisplayName) . "; \"$id\";" . PHP_EOL);
 }
 
+/**
+ * Returns the color to print an object when generating a GraphViz diagram
+ *
+ * @param $obj The String that equals to the static field "classDisplayName" of object's class.
+ */
 function getNodeColor($nodeType) {
   if($nodeType      == Org::$classDisplayName) {
     return COLOR4ORG;
@@ -869,6 +875,43 @@ function getNodeColor($nodeType) {
     die("Missing color for " . $nodeType);
   }
 }
+
+/**
+ * Returns the name of the legend object to which align this object when generating a GraphViz diagram
+ *
+ * @param $obj The String that equals to the static field "classDisplayName" of object's class.
+ */
+function getNodeAlign($nodeType) {
+  if($nodeType      == Org::$classDisplayName) {
+    return Org::$classDisplayName;
+  }
+  else if($nodeType == Vdc::$classDisplayName) {
+    return Vdc::$classDisplayName;
+  }
+  else if($nodeType == Vse::$classDisplayName) {
+    return Vse::$classDisplayName;
+  }
+  else if($nodeType == VseNetwork::$classDisplayName) {
+    return VseNetwork::$classDisplayName;
+  }
+  else if($nodeType == IsolatedNetwork::$classDisplayName) {
+    ## VseNetwork and IsolatedNetwork must be aligned together
+    return VseNetwork::$classDisplayName;
+  }
+  else if($nodeType == Vapp::$classDisplayName) {
+    return Vapp::$classDisplayName;
+  }
+  else if($nodeType == VM::$classDisplayName) {
+    return VM::$classDisplayName;
+  }
+  else if($nodeType == StorageProfile::$classDisplayName) {
+    return StorageProfile::$classDisplayName;
+  }
+  else {
+    die("Missing align for " . $nodeType);
+  }
+}
+
 
 /**
  * Returns the network object representing isolated networks
