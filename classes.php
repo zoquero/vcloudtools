@@ -1,5 +1,12 @@
 <?php
 
+##
+## Library of classes usefull to graphvcloud.php
+##
+## * @author Angel Galindo Muñoz (zoquero at gmail dot com)
+## * @since 20/08/2016
+##
+
 /**
  * A vCloud Organization
  */

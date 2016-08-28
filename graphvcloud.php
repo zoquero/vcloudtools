@@ -348,17 +348,29 @@ function usage() {
  */
 function showObject($o) {
   if(is_null($o)) {
-    echo "  Is a NULL object" . PHP_EOL;
+    echo "  It's a NULL object" . PHP_EOL;
     return;
   }
   else if(is_array($o)) {
-    echo "  It's not an object, it's an array" . PHP_EOL;
+    echo "  It's not an object, it's an array of " . count($o) . " elements" . PHP_EOL;
+    return;
+  }
+  else if(is_string($o)) {
+    echo "  It's not an object, it's a string: " . $o . PHP_EOL;
+    return;
+  }
+  else if(is_numeric($o)) {
+    echo "  It's not an object, it's a number:"  . $o . PHP_EOL;
+    return;
+  }
+  else if(!is_object($o)) {
+    echo "  It's not an object, nor a number, nor a string, nor an array" . PHP_EOL;
     return;
   }
   else {
     echo "  This is an object of class " . get_class($o) . "" . PHP_EOL;
   }
-  echo "  Public methods:" . PHP_EOL;
+  echo "  It's public methods:" . PHP_EOL;
   $egMethods=get_class_methods($o);
   foreach ($egMethods as $aMethod) {
     echo "   * $aMethod" . PHP_EOL;
@@ -481,7 +493,6 @@ function vm2obj(&$vapp, &$sdkVM) {
        array_push($vmNetworks, $aNetConn->get_network());
      }
     }
-  
   }
   return new VM($sdkVM->get_name(), $sdkVM->get_id(), $sdkVM->get_status(), $vmNetworks, $sdkVM->getStorageProfile()->get_name(), $vapp);
 }
@@ -514,7 +525,7 @@ function simplifyString($str) {
 }
 
 /**
- * Generates a GraphViz diagram
+ * Generates a GraphViz diagram and prints it to output file
  *
  * See also:
  * * Docs        : http://www.graphviz.org/Documentation.php
@@ -553,16 +564,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fwrite($fp, "  edge [arrowhead=none,arrowtail=none];"         . PHP_EOL);
 
   fwrite($fp, "  {"                                             . PHP_EOL);
-  fwrite($fp, "    node [style=filled,fillcolor=\"#C0C0C0\"];" . PHP_EOL);
-/*
-  fwrite($fp, "    org -> vDC"                                  . PHP_EOL);
-  fwrite($fp, "    vDC -> vSE"                                  . PHP_EOL);
-  fwrite($fp, "    vSE -> network"                              . PHP_EOL);
-  fwrite($fp, "    network -> StorProf [style=invis]"           . PHP_EOL);
-  fwrite($fp, "    StorProf -> vApp [style=invis]"              . PHP_EOL);
-  fwrite($fp, "    vApp -> VM"                                  . PHP_EOL);
-*/
-
   fwrite($fp, "    " . Org::$classDisplayName            . " -> " . Vdc::$classDisplayName                               . PHP_EOL);
   fwrite($fp, "    " . Vdc::$classDisplayName            . " -> " . Vse::$classDisplayName                               . PHP_EOL);
   fwrite($fp, "    " . Vse::$classDisplayName            . " -> " . VseNetwork::$classDisplayName                        . PHP_EOL);
@@ -577,16 +578,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fwrite($fp, getNodeLegend(StorageProfile::$classDisplayName) . PHP_EOL);
   fwrite($fp, getNodeLegend(Vapp::$classDisplayName)           . PHP_EOL);
   fwrite($fp, getNodeLegend(VM::$classDisplayName)             . PHP_EOL);
-
-/*
-  fwrite($fp, "    Org      [shape=". getNodeShape("Org")            . ",style=filled,fillcolor=\"" . getNodeColor("Org") . "\"];" . PHP_EOL);
-  fwrite($fp, "    vDC      [shape=". getNodeShape("Vdc")            . ",style=filled,fillcolor=\"" . getNodeColor("Vdc")  . "\"];" . PHP_EOL);
-  fwrite($fp, "    vSE      [shape=". getNodeShape("Vse")            . ",style=filled,fillcolor=\"" . getNodeColor("Vse")  . "\"];" . PHP_EOL);
-  fwrite($fp, "    Network  [shape=". getNodeShape("VseNetwork")     . ",style=filled,fillcolor=\"" . getNodeColor("VseNetwork") . "\"];" . PHP_EOL);
-  fwrite($fp, "    StorProf [shape=". getNodeShape("StorageProfile") . ",style=filled,fillcolor=\"" . getNodeColor("StorageProfile")  . "\"];" . PHP_EOL);
-  fwrite($fp, "    vApp     [shape=". getNodeShape("Vapp")           . ",style=filled,fillcolor=\"" . getNodeColor("Vapp")  . "\"];" . PHP_EOL);
-  fwrite($fp, "    VM       [shape=". getNodeShape("VM")             . ",style=filled,fillcolor=\"" . getNodeColor("VM")   . "\"];" . PHP_EOL);
-*/
   fwrite($fp, "  }"                                             . PHP_EOL);
 
   ###################
@@ -595,7 +586,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # Orgs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-# fwrite($fp, "    node [shape=". getNodeShape("Org") . ",style=filled,fillcolor=\"". getNodeColor("Org") . "\"];" . PHP_EOL);
   fwrite($fp, getNodeGroupPreamble(Org::$classDisplayName) . PHP_EOL);
   foreach($orgs as $aNode) {
     printNode($fp, $aNode);
@@ -604,7 +594,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # vDCs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-# fwrite($fp, "    node [shape=". getNodeShape("Vdc") . ",style=filled,fillcolor=\"". getNodeColor("Vdc") . "\"];" . PHP_EOL);
   fwrite($fp, getNodeGroupPreamble(Vdc::$classDisplayName) . PHP_EOL);
   foreach($vdcs as $aNode) {
     printNode($fp, $aNode);
@@ -613,7 +602,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # vSEs"                                     . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-# fwrite($fp, "    node [shape=". getNodeShape("Vse") . ",style=filled,fillcolor=\"". getNodeColor("Vse") . "\"];" . PHP_EOL);
   fwrite($fp, getNodeGroupPreamble(Vse::$classDisplayName) . PHP_EOL);
   foreach($vses as $aNode) {
     printNode($fp, $aNode);
@@ -622,7 +610,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # vSE Networks"                             . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-# fwrite($fp, "    node [shape=". getNodeShape("VseNetwork") . ",style=filled,fillcolor=\"". getNodeColor("VseNetwork") . "\"];" . PHP_EOL);
   fwrite($fp, getNodeGroupPreamble(VseNetwork::$classDisplayName) . PHP_EOL);
   foreach($vseNets as $aNode) {
     printNode($fp, $aNode);
@@ -632,7 +619,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   # $isolatedNets
   fwrite($fp, "  # Isolated Networks"                        . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-# fwrite($fp, "    node [shape=". getNodeShape("IsolatedNetwork") . ",style=filled,fillcolor=\"". getNodeColor("IsolatedNetwork") . "\"];" . PHP_EOL);
   fwrite($fp, getNodeGroupPreamble(IsolatedNetwork::$classDisplayName) . PHP_EOL);
   foreach($isolatedNets as $aNode) {
     printNode($fp, $aNode);
@@ -641,7 +627,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # Storage Profiles"                         . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-# fwrite($fp, "    node [shape=". getNodeShape("StorageProfile") . ",style=filled,fillcolor=\"". getNodeColor("StorageProfile") . "\"];" . PHP_EOL);
   fwrite($fp, getNodeGroupPreamble(StorageProfile::$classDisplayName) . PHP_EOL);
   foreach($storProfs as $aNode) {
     printNode($fp, $aNode);
@@ -650,7 +635,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # vApps"                                    . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-# fwrite($fp, "    node [shape=". getNodeShape("Vapp") . ",style=filled,fillcolor=\"". getNodeColor("Vapp") . "\"];" . PHP_EOL);
   fwrite($fp, getNodeGroupPreamble(Vapp::$classDisplayName) . PHP_EOL);
   foreach($vapps as $aNode) {
     printNode($fp, $aNode);
@@ -659,7 +643,6 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
 
   fwrite($fp, "  # VMs"                                      . PHP_EOL);
   fwrite($fp, "  {"                                          . PHP_EOL);
-# fwrite($fp, "    node [shape=". getNodeShape("VM") . ",style=filled,fillcolor=\"". getNodeColor("VM") . "\"];" . PHP_EOL);
   fwrite($fp, getNodeGroupPreamble(VM::$classDisplayName) . PHP_EOL);
   foreach($vms as $aNode) {
     printNode($fp, $aNode);
@@ -670,16 +653,12 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   ## Edge definitions
   ###################
 
-# print "Orgs:" . PHP_EOL;
-# print "========" . PHP_EOL;
-
   fwrite($fp, "  #"                    . PHP_EOL);
   fwrite($fp, "  # Edges"              . PHP_EOL);
   fwrite($fp, "  #"                    . PHP_EOL);
   fwrite($fp, ""                       . PHP_EOL);
-  fwrite($fp, "  # Org edges:"         . PHP_EOL);
 
-  #              # Org edges:"
+  fwrite($fp, "  # Org edges:"         . PHP_EOL);
   foreach($orgs as $aNode) {
     printLinks($fp, $aNode, $storProfs);
   }
@@ -762,9 +741,6 @@ function getNodeShape($nodeType) {
   }
 }
 
-
-
-
 /**
  * Generates Edges pointing to an object when generating a GraphViz diagram
  *
@@ -835,9 +811,7 @@ function getStorProfIdFromName($storProf, &$storProfs) {
  */
 function printNode($fp, $obj) {
     $id=simplifyString($obj->id);
-#   fwrite($fp, "    \"$id\" [label=\"" . $obj->name . "\",style=filled,fillcolor=\"" . getNodeColor($obj) . "\"]" . PHP_EOL);
     fwrite($fp, "    \"$id\" [label=\"" . $obj->name . "\"]" . PHP_EOL);
-#   fwrite($fp, "    rank = same; " . $obj::$classDisplayName . "; \"$id\";" . PHP_EOL);
     fwrite($fp, "    rank = same; " . getNodeAlign($obj::$classDisplayName) . "; \"$id\";" . PHP_EOL);
 }
 
@@ -912,7 +886,6 @@ function getNodeAlign($nodeType) {
   }
 }
 
-
 /**
  * Returns the network object representing isolated networks
  *
@@ -935,11 +908,11 @@ function getIsolatedNets($vseNets, $vms) {
 }
 
 /**
- * Returns the network object representing isolated networks
+ * Tells if a network name matches with one of the VseNetwork names of an array or one of the IsolatedNetwork names of an array.
  *
  * @param $networkName Name of a network
+ * @param $isolatedNets Array of IsolatedNetwork objects from this lib
  * @param $vseNets Array of VseNetwork objects from this lib
- * @param $vms Array of IsolatedNetwork objects from this lib
  * @return boolean True if network name matches with a VseNetwork or a IsolatedNetwork
  */
 function netNameIsInVseNetworkArrays($networkName, $isolatedNets /* IsolatedNetwork */ , $vseNets /* VseNetwork */) {
