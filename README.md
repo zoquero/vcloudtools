@@ -105,24 +105,24 @@ Generates a GraphViz diagram representing a demo of a vCloud Infraestructure. Us
 
   [Usage]
      # php getvsefwrules.php -s <server> -u <username> -p <password> -v <sdkversion> \ 
-                  -f <ip> -g <port> -h <proto> -i <ip> -j <port> \ 
+                  (-f <ip>) (-g <port>) (-h <proto>) (-i <ip>) (-j <port>) \ 
                   (-o <OrgName) (-d <vdcName) (-e <vShieldEdgeName) \ 
 
-     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director.
-     -u|--user <username>             [req] User name in the form user@organization
+     -s|--server <IP|hostname>        [opt] IP or hostname of the vCloud Director.
+     -u|--user <username>             [opt] User name in the form user@organization
                                            for the vCloud Director.
-     -p|--pswd <password>             [req] Password for user.
-     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5.
-     -f|--fromip                      [req] source IP addres
-     -g|--fromport                    [req] source port
-     -h|--proto                       [req] source proto ('T' for TCP, 'U' for UDP, 'I' for ICMP)
-     -i|--toip                        [req] destination IP addres
-     -j|--toport                      [req] destination Port
+     -p|--pswd <password>             [opt] Password for user.
+     -v|--sdkver <sdkversion>         [opt] SDK Version e.g. 1.5, 5.1 and 5.5.
+     -f|--fromip                      [opt] source IP addres (defaults to 'any')
+     -g|--fromport                    [opt] source port (defaults to 'any')
+     -h|--proto                       [opt] source proto ('T' for TCP, 'U' for UDP, 'I' for ICMP, 'A' or '*' for any) (defaults to 'any')
+     -i|--toip                        [opt] destination IP addres (defaults to 'any')
+     -j|--toport                      [opt] destination Port (defaults to 'any')
      -o|--org                         [opt] Organization
      -d|--vdc                         [opt] Virtual Data Center name
      -e|--vse                         [opt] vShield Edge Gateway name
 
-  You can set the security parameters like server, user and pswd in 'config.php' file
+  You can set the security parameters like server, user and pswd in 'config.php' file, this is why they're optional parameters.
 
   [Examples]
      # php getvsefwrules.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --fromip 1.2.3.4 --fromport 8080 --proto T --toip 192.168.100.10 --toport 80 -o MyOrg -d MyVdcName -e MyVShieldName
