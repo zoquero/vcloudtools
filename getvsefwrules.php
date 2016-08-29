@@ -1,6 +1,6 @@
 <?php
 /**
- * Gets firewall rules of vShield Edges
+ * Gets firewall rules that match from vShield Edges
  * <p>
  * Requires:<ul>
  *              <li> PHP version 5+
@@ -11,7 +11,7 @@
  * Tested on Ubuntu 15.04 64b with PHP 5.6.4
  *
  * <p>
- * TO_DO Improve firewallRule2CsvRow, there are some "to dos" tagged.
+ * TO_DO Improve firewallRule2CsvRow, there are some tagged "to dos".
  *
  * @author Angel Galindo Muñoz (zoquero at gmail dot com)
  * @version 1.0
@@ -75,105 +75,120 @@ $certPath = null;
 
 // loop through command arguments
 foreach (array_keys($opts) as $opt) switch ($opt) {
-    case "s":
-        $server = $opts['s'];
-        break;
-    case "server":
-        $server = $opts['server'];
-        break;
+  case "s":
+    $server = $opts['s'];
+    break;
+  case "server":
+    $server = $opts['server'];
+    break;
 
-    case "u":
-        $user = $opts['u'];
-        break;
-    case "user":
-        $user = $opts['user'];
-        break;
+  case "u":
+    $user = $opts['u'];
+    break;
+  case "user":
+    $user = $opts['user'];
+    break;
 
-    case "p":
-        $pswd = $opts['p'];
-        break;
-    case "pswd":
-        $pswd = $opts['pswd'];
-        break;
+  case "p":
+    $pswd = $opts['p'];
+    break;
+  case "pswd":
+    $pswd = $opts['pswd'];
+    break;
 
-    case "v":
-        $sdkversion = $opts['v'];
-        break;
-    case "sdkver":
-        $sdkversion = $opts['sdkver'];
-        break;
+  case "v":
+    $sdkversion = $opts['v'];
+    break;
+  case "sdkver":
+    $sdkversion = $opts['sdkver'];
+    break;
 
-    case "c":
-        $certPath = $opts['c'];
-        break;
-    case "certpath":
-        $certPath = $opts['certpath'];
-        break;
+  case "c":
+    $certPath = $opts['c'];
+    break;
+  case "certpath":
+    $certPath = $opts['certpath'];
+    break;
 
-    case "f":
-        $fromip = $opts['f'];
-        break;
-    case "fromip":
-        $fromip = $opts['fromip'];
-        break;
+  case "f":
+    $fromip = $opts['f'];
+    break;
+  case "fromip":
+    $fromip = $opts['fromip'];
+    break;
 
-    case "g":
-        $fromport = $opts['g'];
-        break;
-    case "fromport":
-        $fromport = $opts['fromport'];
-        break;
+  case "g":
+    $fromport = $opts['g'];
+    break;
+  case "fromport":
+    $fromport = $opts['fromport'];
+    break;
 
-    case "h":
-        $proto = $opts['h'];
-        break;
-    case "proto":
-        $proto = $opts['proto'];
-        break;
+  case "h":
+    $proto = $opts['h'];
+    break;
+  case "proto":
+    $proto = $opts['proto'];
+    break;
 
-    case "i":
-        $toip = $opts['i'];
-        break;
-    case "toip":
-        $toip = $opts['toip'];
-        break;
+  case "i":
+    $toip = $opts['i'];
+    break;
+  case "toip":
+    $toip = $opts['toip'];
+    break;
 
-    case "j":
-        $toport = $opts['j'];
-        break;
-    case "toport":
-        $toport = $opts['toport'];
-        break;
+  case "j":
+    $toport = $opts['j'];
+    break;
+  case "toport":
+    $toport = $opts['toport'];
+    break;
 
-    case "o":
-        $orgArg = $opts['o'];
-        break;
-    case "org":
-        $orgArg = $opts['org'];
-        break;
+  case "o":
+    $orgArg = $opts['o'];
+    break;
+  case "org":
+    $orgArg = $opts['org'];
+    break;
 
-    case "d":
-        $vdcArg = $opts['d'];
-        break;
-    case "vdc":
-        $vdcArg = $opts['vdc'];
-        break;
+  case "d":
+    $vdcArg = $opts['d'];
+    break;
+  case "vdc":
+    $vdcArg = $opts['vdc'];
+    break;
 
-    case "e":
-        $vseArg = $opts['e'];
-        break;
-    case "vse":
-        $vseArg = $opts['vse'];
-        break;
-
+  case "e":
+    $vseArg = $opts['e'];
+    break;
+  case "vse":
+    $vseArg = $opts['vse'];
+    break;
 }
 
 // parameters validation
-if (!isset($server) || !isset($user) || !isset($pswd) || !isset($sdkversion)
-  || !isset($fromip) || !isset($fromport) || !isset($proto) || !isset($toip) || !isset($toport)) {
+if (!isset($server) || !isset($user) || !isset($pswd) || !isset($sdkversion)) {
     echo "Error: missing required parameters\n";
-    usage();
-    exit(1);
+  usage();
+  exit(1);
+}
+
+// wildcards for $fromip, $fromport, $proto, $toip, $toport
+if (!isset($fromip)) {
+  $fromip   = "*";
+}
+if (!isset($fromport)) {
+  $fromport = "*";
+}
+if (!isset($proto)) {
+  $proto    = "*";
+}
+if (!isset($toip)) {
+  $toip     = "*";
+}
+if (!isset($toport)) {
+  $toport   = "*";
 }
 
 $flag = true;
@@ -453,14 +468,19 @@ function intIsContained($rangeStr, $aInt) {
  */
 function ruleMatch($r, $fromip, $fromport, $proto, $toip, $toport) {
 # if($fromip !== $r->getSourceIp()) 
-  if(!isNetContained($r->getSourceIp(), $fromip)) {
-#echo "break by source ip\n";
+  if($fromip == "*" || isNetContained($r->getSourceIp(), $fromip)) {
+  }
+  else {
+    # break by source ip
     return false;
   }
 
-  if(!($r->getSourcePort() == -1 && $r->getSourcePortRange() == "Any")) {
+  if($fromport == "*" || $r->getSourcePort() == -1 && $r->getSourcePortRange() == "Any") {
+    ## Source Port ok
+  }
+  else {
     if($fromport != $r->getSourcePort() && ! intIsContained($r->getSourcePortRange(), $fromport)) {
-#echo "break by source port: fromport=[$fromport] , getSourcePort=[" . $r->getSourcePort() . "] i getSourcePortRange=[" . $r->getSourcePortRange() . "]\n";
+      # break by source port: fromport=[$fromport] , getSourcePort=[" . $r->getSourcePort() . "] i getSourcePortRange=[" . $r->getSourcePortRange()
       return false;
     }
 
@@ -468,45 +488,58 @@ function ruleMatch($r, $fromip, $fromport, $proto, $toip, $toport) {
       if($fromport != $r->getSourcePort()) {
         return false;
       }
+      ## Source Port ok
     }
     else {
       if(! intIsContained($r->getSourcePortRange(), $fromport)) {
-#echo "break by source port: fromport=[$fromport] , getSourcePort=[" . $r->getSourcePort() . "] i getSourcePortRange=[" . $r->getSourcePortRange() . "]\n";
+        # break by source port: fromport=[$fromport] , getSourcePort=[" . $r->getSourcePort() . "] i getSourcePortRange=[" . $r->getSourcePortRange()
         return false;
       }
+      ## Source Port ok
     }
   }
 
   // A (any), I (ICMP), T (TCP), U (UDP), TU (TCP|UDP), UT (UDP|TCP)
-  if($proto != "A") {
+  if($proto == "A" || $proto == "*") {
+    # Protocol OK
+  }
+  else {
     if($proto == "I" && $r->getProtocols()->getIcmp() != 1) {
-#echo "break by protocol no match icmp\n";
+      # break by protocol no match icmp
       return false;
     }
     else if(($proto == "T" || $proto == "TU" || $proto == "UT") && ($r->getProtocols()->getTcp() != 1)) {
-#echo "break by protocol no match TCP\n";
+      # break by protocol no match TCP
       return false;
     }
     else if(($proto == "U" || $proto == "TU" || $proto == "UT") && ($r->getProtocols()->getUdp() != 1)) {
-#echo "break by protocol no match UDP\n";
+      # break by protocol no match UDP
       return false;
     }
     else if(($proto == "TU" || $proto == "UT") && ($r->getProtocols()->getTcp() != 1 && $r->getProtocols()->getUdp() != 1)) {
-#echo "break by protocol no match TCP|UDP\n";
+      # break by protocol no match TCP|UDP
+      return false;
+    }
+    else {
+      # break by protocol doesn't match 
       return false;
     }
   }
 
-  if(!isNetContained($r->getDestinationIp(), $toip)) {
-#echo "break by destination ip\n";
+  if($toip == "*" || isNetContained($r->getDestinationIp(), $toip)) {
+    # Destination IP OK
+  }
+  else {
+    # break by destination ip
     return false;
   }
 
-
-
-  if(!($r->getPort() == -1 && $r->getDestinationPortRange() == "Any")) {
+  if($toport == "*" || $r->getPort() == -1 && $r->getDestinationPortRange() == "Any") {
+    # Destination port OK
+  }
+  else {
     if($toport != $r->getPort() && ! intIsContained($r->getDestinationPortRange(), $toport)) {
-#echo "break by destination port: toport=[$toport] , getPort=[" . $r->getPort() . "] i getDestinationPortRange=[" . $r->getDestinationPortRange() . "]\n";
+      # break by destination port: toport=[$toport] , getPort=[" . $r->getPort() . "] i getDestinationPortRange=[" . $r->getDestinationPortRange()
       return false;
     }
 
@@ -514,12 +547,14 @@ function ruleMatch($r, $fromip, $fromport, $proto, $toip, $toport) {
       if($toport != $r->getPort()) {
         return false;
       }
+      # Destination port OK
     }
     else {
       if(! intIsContained($r->getDestinationPortRange(), $toport)) {
-#echo "break by destination port: toport=[$toport] , getPort=[" . $r->getPort() . "] i getDestinationPortRange=[" . $r->getDestinationPortRange() . "]\n";
+       # break by destination port: toport=[$toport] , getPort=[" . $r->getPort() . "] i getDestinationPortRange=[" . $r->getDestinationPortRange()
         return false;
       }
+      # Destination port OK
     }
   }
 
