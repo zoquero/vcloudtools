@@ -303,8 +303,8 @@ function usage() {
     echo "     Generates a GraphViz diagram representing your vCloud Infraestructure." . PHP_EOL;
     echo PHP_EOL;
     echo "  [Usage]" . PHP_EOL;
-    echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file>" . PHP_EOL;
-    echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file>" . PHP_EOL;
+    echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file> (--title \"<title>\")" . PHP_EOL;
+    echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file> (-t \"<title>\")" . PHP_EOL;
     echo PHP_EOL;
     echo "     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director."  . PHP_EOL;
     echo "     -u|--user <username>             [req] User name in the form user@organization" . PHP_EOL;
