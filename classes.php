@@ -224,7 +224,10 @@ class StorageProfile {
   public $id       = '';
   public $enabled  = ''; /* 1 === true */
   public $limitMB  = '';
-  /* Where's the capacity/usage ?? TO_DO */
+  /*
+   * Where's the capacity/usage ?? TO_DO 
+   * Already asked at https://developercenter.vmware.com/forums/3579/vcloud-sdk-for-php#542658|3508388
+   */
 
   public function __construct($_name, $_id, $_enabled, $_limit, $_units, &$_vdc) {
     $limMB = StorageProfile::sizeToMB($_limit, $_units);
