@@ -44,6 +44,7 @@ $shorts .= "p:";
 $shorts .= "v:";
 $shorts .= "e:";
 $shorts .= "o:";
+$shorts .= "t:";
 
 $longs  = array(
     "server:",    //-s|--server    [required]
@@ -51,7 +52,8 @@ $longs  = array(
     "pswd:",      //-p|--pswd      [required]
     "sdkver:",    //-v|--sdkver    [required]
     "certpath:",  //-e|--certpath  [optional] local certificate path
-    "output:",    //-o|--output       [required]
+    "output:",    //-o|--output    [required]
+    "title:",     //-t|--title     [optional]
 );
 
 $opts = getopt($shorts, $longs);
@@ -103,13 +105,24 @@ foreach (array_keys($opts) as $opt) switch ($opt) {
     case "output":
         $oFile = $opts['output'];
         break;
+
+    case "t":
+        $title = $opts['t'];
+        break;
+    case "title":
+        $title = $opts['title'];
+        break;
 }
 
 // parameters validation
-if (!isset($server) || !isset($user) || !isset($pswd) || !isset($sdkversion) || !isset($oFile)) {
-    echo "Error: missing required parameters" . PHP_EOL;
-    usage();
-    exit(1);
+if(!isset($server) || !isset($user) || !isset($pswd) || !isset($sdkversion) || !isset($oFile)) {
+  echo "Error: missing required parameters" . PHP_EOL;
+  usage();
+  exit(1);
+}
+
+if(!isset($title)) {
+  $title="Graph for $server in " . date("Y/m/d h:i:s a") ;
 }
 
 if (file_exists($oFile)) {
@@ -269,7 +282,7 @@ if ($flag==true) {
     }
   }
 
-  graph($orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray);
+  graph($orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray, $title);
   echo PHP_EOL;
   echo "Graph '$oFile' Generated successfully." . PHP_EOL;
   echo "Now you can render it with graphviz ( http://www.graphviz.org/ ) this way:" . PHP_EOL;
@@ -293,12 +306,13 @@ function usage() {
     echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file>" . PHP_EOL;
     echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file>" . PHP_EOL;
     echo PHP_EOL;
-    echo "     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director." . PHP_EOL;
+    echo "     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director."  . PHP_EOL;
     echo "     -u|--user <username>             [req] User name in the form user@organization" . PHP_EOL;
-    echo "                                           for the vCloud Director." . PHP_EOL;
-    echo "     -p|--pswd <password>             [req] Password for user." . PHP_EOL;
-    echo "     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5." . PHP_EOL;
-    echo "     -o|--output <file>               [req] Folder where CSVs will be craeted." . PHP_EOL;
+    echo "                                           for the vCloud Director."                 . PHP_EOL;
+    echo "     -p|--pswd <password>             [req] Password for user."                      . PHP_EOL;
+    echo "     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5."      . PHP_EOL;
+    echo "     -o|--output <file>               [req] Folder where CSVs will be created."      . PHP_EOL;
+    echo "     -t|--title <file>                [opt] Title for the graph."                    . PHP_EOL;
     echo PHP_EOL;
     echo "  [Options]" . PHP_EOL;
     echo "     -e|--certpath <certificatepath>  [opt] Local certificate's full path." . PHP_EOL;
@@ -307,7 +321,6 @@ function usage() {
     echo PHP_EOL;
     echo "  [Examples]" . PHP_EOL;
     echo "     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --output /tmp/vc.dot" . PHP_EOL;
-
 }
 
 ?>

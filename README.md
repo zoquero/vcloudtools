@@ -37,6 +37,7 @@ zoquero at gmail dot com
      -p|--pswd <password>             [req] Password for user.
      -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5.
      -o|--dir <directory>             [req] Folder where CSVs will be craeted.
+     -t|--title <file>                [opt] Title for the graph.
 
   [Options]
      -e|--certpath <certificatepath>  [opt] Local certificate's full path.

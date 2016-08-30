@@ -1,5 +1,5 @@
 #
-# Graph genated on 2016/08/28 12:46:08 pm
+# Graph genated on 2016/08/30 07:25:23 pm
 # by vcloudtools:
 # https://github.com/zoquero/vcloudtools
 #
@@ -8,6 +8,7 @@ digraph vCloud {
   rankdir=BT;    # LR RL BT TB
   splines=false; # avoid curve lines
   edge [arrowhead=none,arrowtail=none];
+  graph [label="Sample graph of a vCloud Infrastructure", fontsize="40"];
   {
     Org -> vDC
     vDC -> vSE

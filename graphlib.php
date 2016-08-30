@@ -22,6 +22,7 @@ $doPrintVdc2VmLinks     = false;
 $doPrintVmStorProfLinks = true;
 $rankDir="BT";                   # LR RL BT TB"
 # Colors taken from http://www.color-hex.com/color-palettes/popular.php
+define("DEFAULT_TITLE_SIZE", "40");
 define("COLOR4ORG",  "#f5f5f5");
 define("COLOR4VDC",  "#ffb3ba");
 define("COLOR4VSE",  "#ffdfba");
@@ -240,8 +241,9 @@ function simplifyString($str) {
  * @param $vapps Array of vApps
  * @param $vms Array of VMs
  * @param $storProf Array of Storage Profiles
+ * @param $title Title for graph
  */
-function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
+function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs, $title) {
   global $oFile;
   global $rankDir;
 
@@ -261,7 +263,7 @@ function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs) {
   fwrite($fp, "  rankdir=$rankDir;    # LR RL BT TB"            . PHP_EOL);
   fwrite($fp, "  splines=false; # avoid curve lines"            . PHP_EOL);
   fwrite($fp, "  edge [arrowhead=none,arrowtail=none];"         . PHP_EOL);
-
+  fwrite($fp, "  graph [label=\"$title\", fontsize=\"" . DEFAULT_TITLE_SIZE . "\"];" . PHP_EOL);
   fwrite($fp, "  {"                                             . PHP_EOL);
   fwrite($fp, "    " . Org::$classDisplayName            . " -> " . Vdc::$classDisplayName                               . PHP_EOL);
   fwrite($fp, "    " . Vdc::$classDisplayName            . " -> " . Vse::$classDisplayName                               . PHP_EOL);

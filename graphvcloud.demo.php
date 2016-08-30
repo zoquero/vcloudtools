@@ -77,6 +77,8 @@ $vappsArray     = array();
 $vmsArray       = array();
 $storProfsArray = array();
 
+$title = "Sample graph of a vCloud Infrastructure";
+
 $org1    = new Org("Org1", 1);
 $org2    = new Org("Org2", 1);
 array_push($orgsArray,      $org1);
@@ -164,7 +166,7 @@ array_push($vmsArray,       $VM13);
 array_push($vmsArray,       $VM14);
 array_push($vmsArray,       $VM15);
 
-graph($orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray);
+graph($orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray, $title);
 echo PHP_EOL;
 echo "Graph '$oFile' Generated successfully." . PHP_EOL;
 echo "Now you can render it with graphviz ( http://www.graphviz.org/ ) this way:" . PHP_EOL;
