@@ -37,28 +37,37 @@ require_once dirname(__FILE__) . '/graphlib.php';
 // Get parameters from command line
 $shorts  = "";
 $shorts .= "o:";
+$shorts .= "t:";
 
 $longs  = array(
     "output:",    //-o|--output       [required]
+    "title:",     //-t|--title        [optional]
 );
 
 $opts = getopt($shorts, $longs);
 
 // loop through command arguments
 foreach (array_keys($opts) as $opt) switch ($opt) {
-    case "o":
-        $oFile = $opts['o'];
-        break;
-    case "output":
-        $oFile = $opts['output'];
-        break;
+  case "o":
+    $oFile = $opts['o'];
+    break;
+  case "output":
+    $oFile = $opts['output'];
+    break;
+
+  case "t":
+    $title = $opts['t'];
+    break;
+  case "title":
+    $title = $opts['title'];
+    break;
 }
 
 // parameters validation
 if (!isset($oFile)) {
-    echo "Error: missing required parameters" . PHP_EOL;
-    usage();
-    exit(1);
+  echo "Error: missing required parameters" . PHP_EOL;
+  usage();
+  exit(1);
 }
 
 if (file_exists($oFile)) {
@@ -67,6 +76,9 @@ if (file_exists($oFile)) {
   exit(1);
 }
 
+if (!isset($title)) {
+  $title = "Sample graph of a vCloud Infrastructure";
+}
 
 # Initialization of arrays of objects:
 $orgsArray      = array();
@@ -76,8 +88,6 @@ $vseNetsArray   = array();
 $vappsArray     = array();
 $vmsArray       = array();
 $storProfsArray = array();
-
-$title = "Sample graph of a vCloud Infrastructure";
 
 $org1    = new Org("Org1", 1);
 $org2    = new Org("Org2", 1);
@@ -182,10 +192,11 @@ function usage() {
     echo "     Generates a GraphViz diagram representing a demo of a vCloud Infraestructure." . PHP_EOL;
     echo PHP_EOL;
     echo "  [Usage]" . PHP_EOL;
-    echo "     # php graphvcloud.demo.php --output <file>" . PHP_EOL;
-    echo "     # php graphvcloud.demo.php -o <file>" . PHP_EOL;
+    echo "     # php graphvcloud.demo.php --output <file> (--title \"<title>\")"              . PHP_EOL;
+    echo "     # php graphvcloud.demo.php -o <file> (-t \"<title>\")"                         . PHP_EOL;
     echo PHP_EOL;
-    echo "     -o|--output <file>               [req] Folder where CSVs will be craeted." . PHP_EOL;
+    echo "     -o|--output <file>               [req] Folder where CSVs will be craeted."     . PHP_EOL;
+    echo "     -t|--title <file>                [opt] Title for the graph."                   . PHP_EOL;
     echo PHP_EOL;
     echo "  [Examples]" . PHP_EOL;
     echo "     # php graphvcloud.demo.php --output /tmp/vc.dot" . PHP_EOL;
