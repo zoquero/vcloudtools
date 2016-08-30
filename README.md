@@ -28,15 +28,15 @@ zoquero at gmail dot com
      Generates a GraphViz diagram representing your vCloud Infraestructure.
 
   [Usage]
-     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --dir <dir>
-     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <dir>
+     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file> (--title "<title>")
+     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file> (-t "<title>")
 
      -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director.
      -u|--user <username>             [req] User name in the form user@organization
                                            for the vCloud Director.
      -p|--pswd <password>             [req] Password for user.
      -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5.
-     -o|--dir <directory>             [req] Folder where CSVs will be craeted.
+     -o|--output <file>               [req] Folder where CSVs will be created.
      -t|--title <file>                [opt] Title for the graph.
 
   [Options]
@@ -45,7 +45,7 @@ zoquero at gmail dot com
   You can set the security parameters like server, user and pswd in 'config.php' file
 
   [Examples]
-     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --dir /tmp/vc
+     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --output /tmp/vc.dot
 ```
 
 ## graphcloud.demo.php
@@ -57,10 +57,11 @@ Generates a GraphViz diagram representing a demo of a vCloud Infraestructure. Us
      Generates a GraphViz diagram representing a demo of a vCloud Infraestructure.
 
   [Usage]
-     # php graphvcloud.demo.php --output <file>
-     # php graphvcloud.demo.php -o <file>
+     # php graphvcloud.demo.php --output <file> (--title "<title>")
+     # php graphvcloud.demo.php -o <file> (-t "<title>")
 
      -o|--output <file>               [req] Folder where CSVs will be craeted.
+     -t|--title <file>                [opt] Title for the graph.
 
   [Examples]
      # php graphvcloud.demo.php --output /tmp/vc.dot
