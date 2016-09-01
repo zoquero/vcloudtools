@@ -10,19 +10,49 @@ These tools give you a **better visibility and manageability of your vCloud Infr
 
 ![Sample of a generated diagram](https://github.com/zoquero/vcloudtools/raw/master/diagramsamples/vcloud.thumbnail.png "Sample of a generated diagram")
 
-It **requires** [vCloud SDK for PHP for vCloud Suite 5.5](https://developercenter.vmware.com/web/sdk/5.5.0/vcloud-php). Don't forget to add it's folder to your **```include_path```** setting in your php.ini
+Tested on:
 
-Tested on Ubuntu 15.04 64b with PHP 5.6.4 against vCloud Director 5.5
+* Ubuntu 15.04 64b with PHP 5.6.4 connecting to vCloud Director 5.5
+* Ubuntu 16.04 64b with PHP 7.0   connecting to vCloud Director 5.5
 
 zoquero at gmail dot com
+
 9 August 2016
 
 .
 
-## graphcloud.php
+## Requirements
+
+It **requires**:
+
+* [VMware vCloud SDK for PHP for vCloud Suite 5.5](https://developercenter.vmware.com/web/sdk/5.5.0/vcloud-php).
+* PHP 5 or PHP 7
+
+## Hints for VMware vCloud SDK for PHP
+
+Just download it an unzip it somewhere like "/opt/lib/' and don't forget to add it's folder to your **```include_path```** setting in your php.ini, like this:
+```
+include_path = ".:/usr/share/php:/opt/lib/vcloudPHP-5.5.0/library/"
+```
+
+You'll also need some libs:
+
+* On Ubuntu 15.04 you'll need: 
+```
+sudo apt-get install php-http-request2 php-net-url2
+```
+
+* On Ubuntu 16.04 LTS you'll need: 
+```
+sudo apt-get install php-http-request2 php-net-url2 php-mbstring
+```
+
+## Scripts
+
+### graphcloud.php
 **Generates a GraphViz diagram** representing your vCloud Infraestructure.
 
-### Usage
+#### Usage
 ```
   [Description]
      Generates a GraphViz diagram representing your vCloud Infraestructure.
@@ -48,10 +78,10 @@ zoquero at gmail dot com
      # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --output /tmp/vc.dot
 ```
 
-## graphcloud.demo.php
+### graphcloud.demo.php
 Generates a GraphViz diagram representing a demo of a vCloud Infraestructure. Usefull for generating arbitrary diagrams, for design.
 
-### Usage
+#### Usage
 ```
   [Description]
      Generates a GraphViz diagram representing a demo of a vCloud Infraestructure.
@@ -67,10 +97,10 @@ Generates a GraphViz diagram representing a demo of a vCloud Infraestructure. Us
      # php graphvcloud.demo.php --output /tmp/vc.dot
 ```
 
-## exportvcloud.php
+### exportvcloud.php
 **Dumps** to CSV or XML all the entities (vApps, VMs,  vShields, vDCs and organizations) that you have access to.
 
-### Usage
+#### Usage
 ```
   [Description]
      Dumps to CSV or XML all the entities (vApps, VMs,  vShields, vDCs and organizations) that you have access to.
