@@ -206,16 +206,6 @@ function vm2obj(&$vapp, &$sdkVM) {
  * @return StorageProfile A new StorageProfile object representing that Storage Profile
  */
 function storProf2obj(&$vdc, &$sp) {
-#
-# $sp->getEnabled()  # 1 enabled
-# $sp->getUnits()    # MB
-# $sp->getLimit()    # 112640
-# $sp->getDefault()  # 1
-# $sp->get_name()    # CLOUD-SAS
-# $sp->get_id()      # id
-#
-
-# return new StorageProfile($sp->get_name(), $sp->get_id(), $sp->getEnabled(), $sp->getLimit(), $sp->getUnits(), $vdc);
   $id = $vdc->org->name . "___" . $sp->get_vdcName() . "___" . $sp->get_name();
   return new StorageProfile($sp->get_name(), $id, $sp->get_isEnabled(), $sp->get_storageLimitMB(), $sp->get_storageUsedMB(), $vdc);
 }
