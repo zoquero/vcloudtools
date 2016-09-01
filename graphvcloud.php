@@ -238,18 +238,8 @@ if ($flag==true) {
           $storProf=storProf2obj($vdc, $aStorProfQueryResult);
           array_push($storProfsArray, $storProf);
           echo "--* storProf: " . $storProf->name . "" . PHP_EOL;
-echo "st= " . $storProf . "\n";
         }
       }
-
-
-
-
-###      foreach($sdkVdc->getVdcStorageProfiles() as $storageProfile) {
-###        $storProf=storProf2obj($vdc, $storageProfile);
-###        array_push($storProfsArray, $storProf);
-###        echo "-* storProf: " . $storProf->name . "" . PHP_EOL;
-###      }
 
       # vShield Edge Gateways
 

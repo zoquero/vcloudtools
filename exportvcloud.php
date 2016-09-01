@@ -13,7 +13,7 @@
  * Tested on Ubuntu 15.04 64b with PHP 5.6.4
  * <p>
  * TO_DO:<ul>
- *   <li>on function vDC2CsvRow: get storage capacity usage: $sdkVdc->getStorageCapacity() should return an object of class VMware_VCloud_API_CapacityWithUsageType but now gets a null object.
+ *   <li>Convert "\n" to PHP_EOL
  *   <li>several other tasks tagged as "TO_DO" on source
  * </ul>
  *
@@ -181,6 +181,7 @@ if ($flag==true) {
     $lbFp  = fopen($oDir . '/loadbalancing.txt', 'w');
     $vApFp = fopen($oDir . '/vapp.csv', 'w');
     $vMFp  = fopen($oDir . '/vm.csv', 'w');
+    $spFp  = fopen($oDir . '/storprofs.csv', 'w');
 
     // CSV headers
     fwrite($orgFp, orgCsvHeader() . "\n");
@@ -190,6 +191,7 @@ if ($flag==true) {
     fwrite($nrFp,  "org" . $colSep . "vdc" . $colSep . "vSE" . $colSep . natRuleCsvHeader() . "\n");
     fwrite($vApFp, "org" . $colSep . "vdc" . $colSep . vAppCsvHeader() . "\n");
     fwrite($vMFp,  "org" . $colSep . "vdc" . $colSep . "vApp" . $colSep . vMCsvHeader()   . "\n");
+    fwrite($spFp,  "org" . $colSep . "vdc" . $colSep . storProfsCsvHeader()   . "\n");
   }
 
   // create sdk admin object
@@ -254,6 +256,28 @@ if ($flag==true) {
       $adminVdcObj=$service->createSDKObj($adminVdcRef->get_href());
 
 
+      # Storage Profiles
+      $param = new VMware_VCloud_SDK_Query_Params();
+      $param->setPageSize(128);
+      $param->setFilter('vdc==' . $sdkVdc->getVdc()->get_href());
+      $query = $service->getQueryService();
+      $storProfsQueryResults = $query->queryRecords(VMware_VCloud_SDK_Query_Types::ORG_VDC_STORAGE_PROFILE, $param);
+      if (!empty($storProfsQueryResults)) {
+        $storProfsQueryResults = $storProfsQueryResults->getRecord();
+        // iterate through the org vdc resource pool relation result.
+        foreach ($storProfsQueryResults as $aStorProfQueryResult) {
+          echo "--* storProf: " . $aStorProfQueryResult->get_name() . "" . "\n";
+
+          if($format == "csv") {
+            fwrite($spFp, storProf2CsvRow($aStorProfQueryResult, $sdkOrg->getOrg()->get_name()) . "\n");
+          }
+          else {
+            $storProfFolder = $orgFolder . '/vdc/' . $sdkVdc->getVdc()->get_name() . '/storprofs/';
+            #       dirname   , basename , exportingEntity
+            saveXml($storProfFolder, $aStorProfQueryResult->get_name() . '.xml', $aStorProfQueryResult);
+          }
+        }
+      }
 
 
       $edgeGatewayRefs = $adminVdcObj->getEdgeGatewayRefs();
@@ -405,12 +429,11 @@ if ($flag==true) {
           }
         }
         else {
-          $vseFolder = $vdcFolder . '/vse/' . $edgeGatewayObj->getEdgeGateway()->get_name();
+          $vseFolder = $vdcFolder . '/vse';
           #       dirname   , basename , exportingEntity
-          saveXml($vseFolder, 'vse.xml', $edgeGatewayObj->getEdgeGateway());
+          saveXml($vseFolder, $edgeGatewayObj->getEdgeGateway()->get_name() . '.xml', $edgeGatewayObj->getEdgeGateway());
           # includes: it's configuration and it's network services (NAT, firewall, load balancing, ...)
         }
-
       }
     }
   }
@@ -672,9 +695,7 @@ function vDC2CsvRow($r, $orgName, $service) {
   global $colSep;
   global $vApFp;
   $ret  = $r->getAllocationModel() . $colSep;
-#
-# $ret .= $r->getStorageCapacity() . $colSep; ## TO_DO 
-# TO_DO: on function vDC2CsvRow: get storage capacity usage: $sdkVdc->getStorageCapacity() should return an object of class VMware_VCloud_API_CapacityWithUsageType but now gets a null object.
+
   $ret .= $r->getComputeCapacity()->getCpu()->getReserved() . $colSep;
   $ret .= $r->getComputeCapacity()->getCpu()->getUsed() . $colSep;
   $ret .= $r->getComputeCapacity()->getCpu()->getOverhead() . $colSep;
@@ -716,7 +737,16 @@ function vDC2CsvRow($r, $orgName, $service) {
   $ret .= $r->getVmQuota() . $colSep;
   $ret .= $r->getIsEnabled() . $colSep;
 
+#
+# $ret .= $r->getStorageCapacity() . $colSep; ## TO_DO 
+# get storage capacity usage: $sdkVdc->getStorageCapacity() should return an object of class VMware_VCloud_API_CapacityWithUsageType but now gets a null object. This is why we moved and used "query" to look for StorageProfiles
+#
+
   $storProfs=array();
+  #
+  # $r->getVdcStorageProfiles()->getVdcStorageProfile() is usefull to list storage profiles
+  # but it doesn't give usage information. For that you have to do queries.
+  #
   foreach ($r->getVdcStorageProfiles()->getVdcStorageProfile() as $aSP) {
     array_push($storProfs, $aSP->get_name());
   }
@@ -729,6 +759,39 @@ function vDC2CsvRow($r, $orgName, $service) {
   $ret .= $r->get_name() . $colSep;
   $ret .= $r->get_operationKey() . $colSep;
   $ret .= $r->get_id() . $colSep;
+  return $ret;
+}
+
+
+
+function storProf2CsvRow($r, $orgName) {
+  global $colSep;
+  global $spFp;
+  $id = $orgName . "___"           . $r->get_vdcName() . "___" . $r->get_name();
+
+  $ret  = $orgName                 . $colSep;
+  $ret .= $r->get_vdcName()        . $colSep;
+  $ret .= $r->get_name()           . $colSep;
+  $ret .= $id                      . $colSep;
+  $ret .= $r->get_isEnabled()      . $colSep;
+  $ret .= $r->get_storageUsedMB()  . $colSep;
+  $ret .= $r->get_storageLimitMB() . $colSep;
+  $ret .= $r->get_isDefaultStorageProfile() . $colSep;
+  $ret .= $r->get_isVdcBusy()      . $colSep;
+
+  return $ret;
+}
+
+
+function storProfsCsvHeader() {
+  global $colSep;
+  $ret  = "name". $colSep;
+  $ret .= "id". $colSep;
+  $ret .= "isEnabled". $colSep;
+  $ret .= "storageUsedMB". $colSep;
+  $ret .= "storageLimitMB". $colSep;
+  $ret .= "isDefaultStorageProfile". $colSep;
+  $ret .= "isVdcBusy". $colSep;
   return $ret;
 }
 
