@@ -94,9 +94,9 @@ $org2    = new Org("Org2", 1);
 array_push($orgsArray,      $org1);
 array_push($orgsArray,      $org2);
 
-$vdc1    = new Vdc("Vdc1", "Vdc1", $org1);
-$vdc2    = new Vdc("Vdc2", "Vdc2", $org1);
-$vdc3    = new Vdc("Calculus", "Calculus", $org2);
+$vdc1    = new Vdc("Vdc1", "Vdc1", $org1, 'https://does.not.matter/vcloud/vdc1');
+$vdc2    = new Vdc("Vdc2", "Vdc2", $org1, 'https://does.not.matter/vcloud/vdc2');
+$vdc3    = new Vdc("Calculus", "Calculus", $org2, 'https://does.not.matter/vcloud/vdc3');
 array_push($vdcsArray,      $vdc1);
 array_push($vdcsArray,      $vdc2);
 array_push($vdcsArray,      $vdc3);

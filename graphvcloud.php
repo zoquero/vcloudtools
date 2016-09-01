@@ -122,7 +122,7 @@ if(!isset($server) || !isset($user) || !isset($pswd) || !isset($sdkversion) || !
 }
 
 if(!isset($title)) {
-  $title="Graph for $server in " . date("Y/m/d h:i:s a") ;
+  $title="Graph for $server at " . date("Y/m/d h:i:s a") ;
 }
 
 if (file_exists($oFile)) {
@@ -221,14 +221,24 @@ if ($flag==true) {
       $sdkVdc = $service->createSDKObj($vdcRef);
       echo "-* vDC: " . $sdkVdc->getVdc()->get_name() . "" . PHP_EOL;
 
-      $vdc=vdc2obj($org, $sdkVdc->getVdc());
+      $vdc=vdc2obj($org, $sdkVdc->getVdc(), $sdkVdc->getVdc()->get_href());
       array_push($vdcsArray, $vdc);
 
       # Storage Profiles
-      foreach($sdkVdc->getVdcStorageProfiles() as $storageProfile) {
-        $storProf=storProf2obj($vdc, $storageProfile);
-        array_push($storProfsArray, $storProf);
-        echo "-* storProf: " . $storProf->name . "" . PHP_EOL;
+
+      $param = new VMware_VCloud_SDK_Query_Params();
+      $param->setPageSize(128);
+      $param->setFilter('vdc==' . $sdkVdc->getVdc()->get_href());
+      $query = $service->getQueryService();
+      $storProfsQueryResults = $query->queryRecords(VMware_VCloud_SDK_Query_Types::ORG_VDC_STORAGE_PROFILE, $param);
+      if (!empty($storProfsQueryResults)) {
+        $storProfsQueryResults = $storProfsQueryResults->getRecord();
+        // iterate through the org vdc resource pool relation result.
+        foreach ($storProfsQueryResults as $aStorProfQueryResult) {
+          $storProf=storProf2obj($vdc, $aStorProfQueryResult);
+          array_push($storProfsArray, $storProf);
+          echo "--* storProf: " . $storProf->name . "" . PHP_EOL;
+        }
       }
 
       # vShield Edge Gateways

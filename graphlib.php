@@ -109,10 +109,11 @@ function org2obj(&$org) {
  *
  * @param $vdc The vDC taken from this lib
  * @param $org The organization to which the vDC belongs, from this lib, passed by reference
+ * @param $href It's href
  * @return a new Vdc object representing that vDC, passed by reference
  */
-function vdc2obj(&$org, &$vdc) {
-  return new Vdc($vdc->get_name(), $vdc->get_id() , $org);
+function vdc2obj(&$org, &$vdc, $href) {
+  return new Vdc($vdc->get_name(), $vdc->get_id(), $org, $href);
 }
 
 /**
@@ -205,17 +206,8 @@ function vm2obj(&$vapp, &$sdkVM) {
  * @return StorageProfile A new StorageProfile object representing that Storage Profile
  */
 function storProf2obj(&$vdc, &$sp) {
-#
-# $sp->getEnabled()  # 1 enabled
-# $sp->getUnits()    # MB
-# $sp->getLimit()    # 112640
-# $sp->getDefault()  # 1
-# $sp->get_name()    # CLOUD-SAS
-# $sp->get_id()      # id
-#  .... where's the current disk usage?? ( TO_DO )
-#
-
-  return new StorageProfile($sp->get_name(), $sp->get_id(), $sp->getEnabled(), $sp->getLimit(), $sp->getUnits(), $vdc);
+  $id = $vdc->org->name . "___" . $sp->get_vdcName() . "___" . $sp->get_name();
+  return new StorageProfile($sp->get_name(), $id, $sp->get_isEnabled(), $sp->get_storageLimitMB(), $sp->get_storageUsedMB(), $vdc);
 }
 
 function simplifyString($str) {
