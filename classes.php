@@ -45,17 +45,19 @@ class Vdc {
   public $name = '';
   public $id   = '';
   public $org  = null;
+  public $href = '';
 
-  public function __construct($_name, $_id, &$_org) {
+  public function __construct($_name, $_id, &$_org, $_href) {
     $this->parent = $_org;
     $this->name   = $_name;
     $this->id     = $_id;
     $this->org    = $_org;
+    $this->href   = $_href;
   }
 
   public function __toString() {
     $org = $this->org;
-    return "vDC with name='" . $this->name . "', id='" . $this->id . "' from org '" . $org->name . "'";
+    return "vDC with name='" . $this->name . "', id='" . $this->id . "' from org '" . $org->name . "' and with href=\"" . $this->href . "\"";
   }
 }
 
@@ -224,23 +226,21 @@ class StorageProfile {
   public $id       = '';
   public $enabled  = ''; /* 1 === true */
   public $limitMB  = '';
+  public $usedMB  = '';
   /*
    * Where's the capacity/usage ?? TO_DO 
    * Already asked at https://developercenter.vmware.com/forums/3579/vcloud-sdk-for-php#542658|3508388
    */
 
-  public function __construct($_name, $_id, $_enabled, $_limit, $_units, &$_vdc) {
-    $limMB = StorageProfile::sizeToMB($_limit, $_units);
-    if($limMB == null) {
-      trigger_error("Can't convert this limit to MB (limit=$_limit, units=$_units)", E_USER_WARNING);
-      return null;
-    }
+  public function __construct($_name, $_id, $_enabled, $_limitMB, $_usedMB, &$_vdc) {
+#   $limMB = StorageProfile::sizeToMB($_limit, $_units);
 
     $this->parent   = $_vdc;
     $this->name     = $_name;
     $this->id       = $_id;
     $this->enabled  = $_enabled;
-    $this->limitMB  = $limMB;
+    $this->limitMB  = $_limitMB;
+    $this->usedMB   = $_usedMB;
     $this->vdc      = $_vdc;
     $this->org      = $_vdc->org;
   }
@@ -254,6 +254,7 @@ class StorageProfile {
  * @param $size
  * @param $units "MB", "GB", "TB", "PB"
  * @return int size in MegaBytes
+ * @deprecated It was useful before realizing that just could extract disk usage doing a query. Before I got it from the Vdc object, which has a "limit" and a "unit".
  */
   public static function sizeToMB($size, $units) {
     if($units      == "MB") {
@@ -274,7 +275,7 @@ class StorageProfile {
   public function __toString() {
     $org = $this->org;
     $vdc = $this->vdc;
-    return "Storage Profile with name='" . $this->name . "', id='" . $this->id . "', enabled='" . $this->enabled . "', with limit='" . $this->limitMB . "' MB, from org '" . $org->name . "' and vdc '" . $vdc->name . "'" ;
+    return "Storage Profile with name='" . $this->name . "', id='" . $this->id . "', enabled='" . $this->enabled . "', with limit='" . $this->limitMB . "' MB, with usage='" . $this->usedMB . "' MB, from org '" . $org->name . "' and vdc '" . $vdc->name . "'" ;
   }
 }
 
