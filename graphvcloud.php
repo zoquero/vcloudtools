@@ -207,7 +207,8 @@ if ($flag==true) {
     $adminOrgRef = $adminOrgRefs[0];
     $adminOrgObj = $service->createSDKObj($adminOrgRef->get_href());
 
-    $org=org2obj($sdkOrg->getOrg());
+    $sdkOrgOrg=$sdkOrg->getOrg();
+    $org=org2obj($sdkOrgOrg);
     array_push($orgsArray, $org);
 
     $vdcRefs = $sdkOrg->getVdcRefs();
@@ -221,7 +222,8 @@ if ($flag==true) {
       $sdkVdc = $service->createSDKObj($vdcRef);
       echo "-* vDC: " . $sdkVdc->getVdc()->get_name() . "" . PHP_EOL;
 
-      $vdc=vdc2obj($org, $sdkVdc->getVdc(), $sdkVdc->getVdc()->get_href());
+      $sdkVdcVdc=$sdkVdc->getVdc();
+      $vdc=vdc2obj($org, $sdkVdcVdc, $sdkVdc->getVdc()->get_href());
       array_push($vdcsArray, $vdc);
 
       # Storage Profiles
