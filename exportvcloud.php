@@ -115,9 +115,11 @@ if (!isset($server) || !isset($user) || !isset($pswd) || !isset($sdkversion) || 
 
 if (!is_dir($oDir)) {
   mkdir($oDir, 0700);
-  echo "Error: $oDir is not a directory and cannot be created\n";
-  usage();
-  exit(1);
+  if (!is_dir($oDir)) {
+    echo "Error: $oDir is not a directory and cannot be created\n";
+    usage();
+    exit(1);
+  }
 }
 
 if ($format != "csv" && $format != "xml") {
