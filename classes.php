@@ -225,11 +225,15 @@ class StorageProfile {
   public $name     = '';
   public $id       = '';
   public $enabled  = ''; /* 1 === true */
-  public $limitMB  = '';
-  public $usedMB  = '';
+  public $limitMB  = -1;
+  public $usedMB   = -1;
+  public $usedPercent  = -1;
+  public $vdc      = null;
+  public $org      = null;
+
   /*
-   * Where's the capacity/usage ?? TO_DO 
-   * Already asked at https://developercenter.vmware.com/forums/3579/vcloud-sdk-for-php#542658|3508388
+   * about the capacity/usage :
+   * https://developercenter.vmware.com/forums/3579/vcloud-sdk-for-php#542658|3508388
    */
 
   public function __construct($_name, $_id, $_enabled, $_limitMB, $_usedMB, &$_vdc) {
@@ -241,6 +245,7 @@ class StorageProfile {
     $this->enabled  = $_enabled;
     $this->limitMB  = $_limitMB;
     $this->usedMB   = $_usedMB;
+    $this->usedPercent = $_usedMB / $_limitMB * 100;
     $this->vdc      = $_vdc;
     $this->org      = $_vdc->org;
   }
@@ -275,7 +280,7 @@ class StorageProfile {
   public function __toString() {
     $org = $this->org;
     $vdc = $this->vdc;
-    return "Storage Profile with name='" . $this->name . "', id='" . $this->id . "', enabled='" . $this->enabled . "', with limit='" . $this->limitMB . "' MB, with usage='" . $this->usedMB . "' MB, from org '" . $org->name . "' and vdc '" . $vdc->name . "'" ;
+    return "Storage Profile with name='" . $this->name . "', id='" . $this->id . "', enabled='" . $this->enabled . "', with limit='" . $this->limitMB . "' MB, with usage='" . $this->usedMB . "' MB (" . $this->usedPercent . "%), from org '" . $org->name . "' and vdc '" . $vdc->name . "'" ;
   }
 }
 

@@ -97,6 +97,40 @@ Generates a GraphViz diagram representing a demo of a vCloud Infraestructure. Us
      # php graphvcloud.demo.php --output /tmp/vc.dot
 ```
 
+### check_vcloudstorprof.php
+
+**Nagios plugin** to check **Storage Profiles usage** on vCloud Director
+
+#### Usage
+```
+  [Description]
+     * Nagios plugin to check Storage Profiles usage on vCloud Director
+
+  [Usage]
+     # php check_vcloudstorprof.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --warning warnthreshold --critical critthreshold (--org <orgname> --vdc <vdcname> --storprof <storprofname>)
+     # php check_vcloudstorprof.php -s <server> -u <username> -p <password> -v <sdkversion> -w warnthreshold -c critthreshold (-o <orgname> -d <vdcname> -t <storprofname>)
+
+     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director.
+     -u|--user <username>             [req] User name in the form user@organization
+                                           for the vCloud Director.
+     -p|--pswd <password>             [req] Password for user.
+     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5.
+     -w|--warning <warnthreshold>     [req] Warning % threshold for stor prof usage
+     -c|--critical <critthreshold>    [req] Critical % threshold for stor prof usage
+
+  [Options]
+     -e|--certpath <certificatepath>  [opt] Local certificate's full path.
+     -o|--org <orgname>               [opt] Organization name
+     -d|--vdc <vdcname>               [opt] vDC name.
+     -t|--storprof <storprofname>     [opt] Storage Profile name.
+
+  You can set the security parameters like server, user and pswd in 'config.php' file
+
+  [Examples]
+     # php check_vcloudstorpro.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --warning 90 --critical 95
+     # php check_vcloudstorpro.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --warning 90 --critical 95 -o MyOrg -d MyVdc -t MyStorProf
+```
+
 ### exportvcloud.php
 **Dumps** to CSV or XML all the entities (vApps, VMs,  vShields, vDCs and organizations) that you have access to.
 
