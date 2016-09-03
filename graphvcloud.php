@@ -17,14 +17,11 @@
  *             ( https://developercenter.vmware.com/web/sdk/5.5.0/vcloud-php )
  * </ul>
  * <p>
- * Tested on Ubuntu 15.04 64b with PHP 5.6.4
- * <p>
- *   TO_DO:
- *   <ul>
- *     <li> To be able to graph just a subset of your infraestructure
- *            (just one organization, vDC, vShield Edge, vApp or VM
- *             and all of it's objects downwards).
- *   </ul>
+ * Tested on
+ * <ul>
+ *   <li>Ubuntu 15.04 64b with PHP 5.6.4
+ *   <li>Ubuntu 16.04 64b with PHP 7.0.8
+ * </ul>
  *
  * @author Angel Galindo Muñoz (zoquero at gmail dot com)
  * @version 1.1
@@ -54,6 +51,7 @@ $longs  = array(
     "certpath:",  //-e|--certpath  [optional] local certificate path
     "output:",    //-o|--output    [required]
     "title:",     //-t|--title     [optional]
+    "part:",      //-r|--part      [optional]
 );
 
 $opts = getopt($shorts, $longs);
@@ -61,57 +59,73 @@ $opts = getopt($shorts, $longs);
 // Initialize parameters
 # $httpConfig = array('ssl_verify_peer'=>false, 'ssl_verify_host'=>false); ## From config.php
 $certPath = null;
+$parts = array();
 
 // loop through command arguments
 foreach (array_keys($opts) as $opt) switch ($opt) {
-    case "s":
-        $server = $opts['s'];
-        break;
-    case "server":
-        $server = $opts['server'];
-        break;
+  case "s":
+    $server = $opts['s'];
+    break;
+  case "server":
+    $server = $opts['server'];
+    break;
 
-    case "u":
-        $user = $opts['u'];
-        break;
-    case "user":
-        $user = $opts['user'];
-        break;
+  case "u":
+    $user = $opts['u'];
+    break;
+  case "user":
+    $user = $opts['user'];
+    break;
 
-    case "p":
-        $pswd = $opts['p'];
-        break;
-    case "pswd":
-        $pswd = $opts['pswd'];
-        break;
+  case "p":
+    $pswd = $opts['p'];
+    break;
+  case "pswd":
+    $pswd = $opts['pswd'];
+    break;
 
-    case "v":
-        $sdkversion = $opts['v'];
-        break;
-    case "sdkver":
-        $sdkversion = $opts['sdkver'];
-        break;
+  case "v":
+    $sdkversion = $opts['v'];
+    break;
+  case "sdkver":
+    $sdkversion = $opts['sdkver'];
+    break;
 
-    case "e":
-        $certPath = $opts['e'];
-        break;
-    case "certpath":
-        $certPath = $opts['certpath'];
-        break;
+  case "e":
+    $certPath = $opts['e'];
+    break;
+  case "certpath":
+    $certPath = $opts['certpath'];
+    break;
 
-    case "o":
-        $oFile = $opts['o'];
-        break;
-    case "output":
-        $oFile = $opts['output'];
-        break;
+  case "o":
+    $oFile = $opts['o'];
+    break;
+  case "output":
+    $oFile = $opts['output'];
+    break;
 
-    case "t":
-        $title = $opts['t'];
-        break;
-    case "title":
-        $title = $opts['title'];
-        break;
+  case "t":
+    $title = $opts['t'];
+    break;
+  case "title":
+    $title = $opts['title'];
+    break;
+
+# case "r":
+#   break;
+
+  case "part":
+    $param = $opts['part'];
+    if(is_array($param)) {
+      foreach($param as $comp) {
+        array_push($parts, $comp);
+      }
+    }
+    else {
+      array_push($parts, $param);
+    }
+    break;
 }
 
 // parameters validation
@@ -130,6 +144,36 @@ if (file_exists($oFile)) {
   usage();
   exit(1);
 }
+
+$zParts = array();
+foreach($parts as $part) {
+  if(! preg_match("/(.+)=(.+)/", $part, $z)) {
+    echo "Parts must be in 'partType=partName' format\n";
+    usage();
+    exit(1);
+  }
+  if($z[1] != Org::$classDisplayName             && 
+     $z[1] != Vdc::$classDisplayName             && 
+     $z[1] != Vse::$classDisplayName             && 
+     $z[1] != VseNetwork::$classDisplayName      && 
+     $z[1] != IsolatedNetwork::$classDisplayName && 
+     $z[1] != Vapp::$classDisplayName            && 
+     $z[1] != VM::$classDisplayName              && 
+     $z[1] != StorageProfile ::$classDisplayName) {
+    echo "Parts must be in 'partType=partName' format. " . $z[1] . " is not a valid partType.\n";
+    echo "Tip: Do `grep -e ^class -e classDisplayName " . dirname(__FILE__) . '/classes.php` to list partTypes' . "\n";
+    usage();
+    exit(1);
+  }
+
+  $aHashPart = array("partType" => $z[1], "partName" => $z[2]);
+  array_push($zParts, $aHashPart);
+}
+
+foreach($zParts as $aZPart) {
+  echo "A part : type = " . $aZPart["partType"] . " name = " . $aZPart["partName"] . "\n";
+}
+
 
 $flag = true;
 if (isset($certPath)) {
@@ -294,6 +338,9 @@ if ($flag==true) {
     }
   }
 
+  if(count($parts) > 0) {
+    filterParts($parts, $orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray);
+  }
   graph($orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray, $title);
   echo PHP_EOL;
   echo "Graph '$oFile' Generated successfully." . PHP_EOL;
@@ -315,8 +362,8 @@ function usage() {
     echo "     Generates a GraphViz diagram representing your vCloud Infraestructure." . PHP_EOL;
     echo PHP_EOL;
     echo "  [Usage]" . PHP_EOL;
-    echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file> (--title \"<title>\")" . PHP_EOL;
-    echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file> (-t \"<title>\")" . PHP_EOL;
+    echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file> (--title \"<title>\") (--part partType=partName)" . PHP_EOL;
+    echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file> (-t \"<title>\") (-r partType=partName)" . PHP_EOL;
     echo PHP_EOL;
     echo "     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director."  . PHP_EOL;
     echo "     -u|--user <username>             [req] User name in the form user@organization" . PHP_EOL;

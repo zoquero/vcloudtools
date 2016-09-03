@@ -217,6 +217,57 @@ function simplifyString($str) {
 }
 
 /**
+ * Filters the arrays of components just conserving the selected ones and it's direct relations.
+ *
+ * @param $parts Array of parts in "partType=partName" style, where "partType" must be some node's classDisplayName static attribute.
+ * @param $orgs Array of organizations
+ * @param $vdcs Array of Virtual Datacenters
+ * @param $vses Array of vShield Edges
+ * @param $vseNets Array of Networks
+ * @param $vapps Array of vApps
+ * @param $vms Array of VMs
+ * @param $storProf Array of Storage Profiles
+ * @param $title Title for graph
+ */
+function filterParts(&$parts, &$orgs, &$vdcs, &$vses, &$vseNets, &$vapps, &$vms, &$storProfs, &$title) {
+  $pushedOrgs      = array();
+  $pushedVdcs      = array();
+  $pushedVses      = array();
+  $pushedVseNets   = array();
+  $pushedVapps     = array();
+  $pushedVms       = array();
+  $pushedStorProfs = array();
+  $pushedTitle     = array();
+
+  foreach($parts as $aPart) {
+showObject($aPart);
+    echo "A part : type = " . $aPart["partType"] . " name = " . $aPart["partName"] . "\n";
+
+    switch ($aPart["partType"]) {
+      case Org::$classDisplayName:
+        break;
+      case Vdc::$classDisplayName:
+        break;
+      case Vse::$classDisplayName:
+        break;
+      case VseNetwork::$classDisplayName:
+        break;
+      case IsolatedNetwork::$classDisplayName:
+        break;
+      case Vapp::$classDisplayName:
+        break;
+      case VM::$classDisplayName:
+        echo "vm !!!\n";
+        break;
+      case StorageProfile::$classDisplayName:
+        break;
+      default:
+        die("Unexpected partType " . $aPart["partType"] . " on filterParts");
+    }
+  }
+} 
+
+/**
  * Generates a GraphViz diagram and prints it to output file
  *
  * See also:
@@ -235,7 +286,7 @@ function simplifyString($str) {
  * @param $storProf Array of Storage Profiles
  * @param $title Title for graph
  */
-function graph($orgs, $vdcs, $vses, $vseNets, $vapps, $vms, $storProfs, $title) {
+function graph(&$orgs, &$vdcs, &$vses, &$vseNets, &$vapps, &$vms, &$storProfs, &$title) {
   global $oFile;
   global $rankDir;
 
