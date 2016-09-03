@@ -219,7 +219,7 @@ function simplifyString($str) {
 /**
  * Filters the arrays of components just conserving the selected ones and it's direct relations.
  *
- * @param $parts Array of parts in "partType=partName" style, where "partType" must be some node's classDisplayName static attribute.
+ * @param $filters Array of Filter to specify the parts of the infraestructure to be painted.
  * @param $orgs Array of organizations
  * @param $vdcs Array of Virtual Datacenters
  * @param $vses Array of vShield Edges
@@ -227,9 +227,8 @@ function simplifyString($str) {
  * @param $vapps Array of vApps
  * @param $vms Array of VMs
  * @param $storProf Array of Storage Profiles
- * @param $title Title for graph
  */
-function filterParts(&$parts, &$orgs, &$vdcs, &$vses, &$vseNets, &$vapps, &$vms, &$storProfs, &$title) {
+function filterParts(&$filters, &$orgs, &$vdcs, &$vses, &$vseNets, &$vapps, &$vms, &$storProfs) {
   $pushedOrgs      = array();
   $pushedVdcs      = array();
   $pushedVses      = array();
@@ -239,11 +238,10 @@ function filterParts(&$parts, &$orgs, &$vdcs, &$vses, &$vseNets, &$vapps, &$vms,
   $pushedStorProfs = array();
   $pushedTitle     = array();
 
-  foreach($parts as $aPart) {
-showObject($aPart);
-    echo "A part : type = " . $aPart["partType"] . " name = " . $aPart["partName"] . "\n";
+  foreach($filters as $aFilter) {
+    echo "A part : type = " . $aFilter->type . " name = " . $aFilter->name . "\n";
 
-    switch ($aPart["partType"]) {
+    switch ($aFilter->type) {
       case Org::$classDisplayName:
         break;
       case Vdc::$classDisplayName:
@@ -257,15 +255,63 @@ showObject($aPart);
       case Vapp::$classDisplayName:
         break;
       case VM::$classDisplayName:
-        echo "vm !!!\n";
+        $vmsGot = getVMsByName($vms, $aFilter->name);
+        if($vmsGot == null) {
+          print "Warning: Can't find a VM called " . $aFilter->name . "\n";
+        }
+        else {
+          $pushedVms = array_merge_any($pushedVms, $vmsGot);
+        }
+        $pushedVapps = array();
+        foreach($pushedVms as $aVM) { array_push($pushedVapps, $aVM->vapp); }
         break;
       case StorageProfile::$classDisplayName:
         break;
       default:
-        die("Unexpected partType " . $aPart["partType"] . " on filterParts");
+        die("Unexpected partType " . $aFilter->type . " on filterParts");
     }
   }
-} 
+  $vms = $pushedVms;
+}
+
+function array_merge_any($anArray, $arrayOrScalar) {
+  if(is_array($arrayOrScalar)) {
+    $anArray = array_merge($anArray, $arrayOrScalar);
+  }
+  else {
+    array_push($anArray, $arrayOrScalar);
+  }
+  return $anArray;
+}
+
+/**
+ * Returns the VMs from an array that has certain name.
+ *
+ * It will return:
+ * <ul>
+ *   <li> null                         : not found
+ *   <li> One object of class VM       : 1 found
+ *   <li> Array of objects of class VM : more than 1 VMs found
+ * </ul>
+ *
+ * @param $vms Array of "VM" objects
+ * @param $name String name
+ * @return array of VM objects
+ */
+function getVMsByName($vms, $name) {
+  $r = array();
+  foreach($vms as $aVM) {
+    if($aVM->name == $name) {
+      array_push($r, $aVM);
+    }
+  }
+  if(count($r) == 0) {
+    return null;
+  }
+  else {
+    return $r;
+  }
+}
 
 /**
  * Generates a GraphViz diagram and prints it to output file
@@ -674,6 +720,16 @@ function netNameIsInVseNetworkArrays($networkName, $isolatedNets /* IsolatedNetw
     }
   }
   return false;
+}
+
+class Filter {
+  public $type = '';
+  public $name = '';
+
+  public function __construct($_type, $_name) {
+    $this->type   = $_type;
+    $this->name   = $_name;
+  }
 }
 
 ?>

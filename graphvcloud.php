@@ -145,7 +145,7 @@ if (file_exists($oFile)) {
   exit(1);
 }
 
-$zParts = array();
+$zParts = /* Filter */ array();
 foreach($parts as $part) {
   if(! preg_match("/(.+)=(.+)/", $part, $z)) {
     echo "Parts must be in 'partType=partName' format\n";
@@ -166,12 +166,12 @@ foreach($parts as $part) {
     exit(1);
   }
 
-  $aHashPart = array("partType" => $z[1], "partName" => $z[2]);
-  array_push($zParts, $aHashPart);
+  $aFilter = new Filter($z[1], $z[2]);
+  array_push($zParts, $aFilter);
 }
 
 foreach($zParts as $aZPart) {
-  echo "A part : type = " . $aZPart["partType"] . " name = " . $aZPart["partName"] . "\n";
+  echo "A part : type = " . $aZPart->type . " name = " . $aZPart->name . "\n";
 }
 
 
@@ -339,7 +339,7 @@ if ($flag==true) {
   }
 
   if(count($parts) > 0) {
-    filterParts($parts, $orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray);
+    filterParts($zParts, $orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray);
   }
   graph($orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray, $title);
   echo PHP_EOL;
