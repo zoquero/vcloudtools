@@ -239,39 +239,241 @@ function filterParts(&$filters, &$orgs, &$vdcs, &$vses, &$vseNets, &$vapps, &$vm
   $pushedTitle     = array();
 
   foreach($filters as $aFilter) {
-    echo "A part : type = " . $aFilter->type . " name = " . $aFilter->name . "\n";
-
     switch ($aFilter->type) {
       case Org::$classDisplayName:
+        foreach($orgs as $aOrg) {
+          if($aOrg->name == $aFilter->name) {
+            $pushedOrgs = array($aOrg);
+          }
+        }
+        foreach($vdcs as $aVdc) {
+          if($aVdc->org->name == $aFilter->name) {
+            if(!in_array($aVdc, $pushedVdcs)) array_push($pushedVdcs, $aVdc);
+          }
+        }
+        foreach($vses as $aVse) {
+          if(in_array($aVse->vdc, $pushedVdcs)) {
+            if(!in_array($aVse, $pushedVses)) array_push($pushedVses, $aVse);
+          }
+        }
+        foreach($vseNets as $aVseNet) {
+          if(in_array($aVseNet->vse, $pushedVses)) {
+            if(!in_array($aVseNet, $pushedVseNets)) array_push($pushedVseNets, $aVseNet);
+          }
+        }
+        foreach($vapps as $aVapp) {
+          foreach($aVapp->networks as $aVappNetwork) {
+            foreach($pushedVseNets as $aPushedVseNet) {
+              if($aPushedVseNet->name === $aVappNetwork) {
+                if(!in_array($aVapp, $pushedVapps)) array_push($pushedVapps, $aVapp);
+              }
+            }
+          }
+        }
+        foreach($vms as $aVm) {
+          foreach($aVm->networks as $aVmNetwork) {
+            foreach($pushedVseNets as $aPushedVseNet) {
+              if($aPushedVseNet->name === $aVmNetwork) {
+                if(!in_array($aVm, $pushedVms)) array_push($pushedVms, $aVm);
+              }
+            }
+          }
+        }
+        foreach($storProfs as $aStorProf) {
+          foreach($pushedVms as $aPushedVm) {
+            if($aPushedVm->storProf === $aStorProf->name) {
+              if(!in_array($aStorProf, $pushedStorProfs)) array_push($pushedStorProfs, $aStorProf);
+            }
+          }
+        }
+
+
         break;
+
       case Vdc::$classDisplayName:
+        print "Filter by " . $aFilter->type . " is still not implemented\n";
         break;
+
       case Vse::$classDisplayName:
+        # push the vSE
+        foreach($vses as $aVse)  {
+          if($aVse->name == $aFilter->name) {
+            if(!in_array($aVse, $pushedVses)) array_push($pushedVses, $aVse);
+          }
+        }
+        # push vSEs' networks
+        foreach($pushedVses as $aVse)  {
+          foreach($vseNets as $aVseNet) {
+            if($aVseNet->vse === $aVse) {
+              if(!in_array($aVseNet, $pushedVseNets)) array_push($pushedVseNets, $aVseNet);
+            }
+          }
+        }
+        # push networks's VMs
+        foreach($pushedVseNets as $aVseNet)  {
+          foreach($vms as $aVm) {
+            if(in_array($aVseNet->name, $aVm->networks)) {
+              if(!in_array($aVm, $pushedVms)) array_push($pushedVms, $aVm);
+            }
+          }
+        }
+        # push networks's vApps
+        foreach($pushedVseNets as $aVseNet)  {
+          foreach($vapps as $aVapp) {
+            if(in_array($aVseNet->name, $aVapp->networks)) {
+              if(!in_array($aVapp, $pushedVapps)) array_push($pushedVapps, $aVapp);
+            }
+          }
+        }
+        # push the VMs' Storage Profiles
+        foreach($pushedVms as $aVM) {
+          foreach($storProfs as $aStorProf) {
+            if($aVM->storProf == $aStorProf->id) {
+              if(!in_array($aStorProf, $pushedStorProfs)) array_push($pushedStorProfs, $aStorProf);
+            }
+          }
+        }
+        # push the vShield Edges's and VM's vDCs
+        foreach($pushedVses as $aVse) {
+          if(!in_array($aVse->vdc, $pushedVdcs)) array_push($pushedVdcs, $aVse->vdc);
+        }
+        foreach($pushedVms as $aVM) {
+          if(!in_array($aVM->vdc, $pushedVdcs)) array_push($pushedVdcs, $aVM->vdc);
+        }
+        # push vDCs' Orgs
+        foreach($pushedVdcs as $aVdc) {
+          if(!in_array($aVdc->org, $pushedOrgs)) array_push($pushedOrgs, $aVdc->org);
+        }
         break;
+
       case VseNetwork::$classDisplayName:
+        print "Filter by " . $aFilter->type . " is still not implemented\n";
         break;
+
       case IsolatedNetwork::$classDisplayName:
+        print "Filter by " . $aFilter->type . " is still not implemented\n";
         break;
+
       case Vapp::$classDisplayName:
+        # push the vApp's VMs
+        foreach($vms as $aVM)  {
+          if($aVM->vapp->name == $aFilter->name) {
+            if(!in_array($aVM, $pushedVms)) array_push($pushedVms, $aVM);
+          }
+        }
+        # push the vApp
+        foreach($vapps as $aVapp)  {
+          if($aVapp->name == $aFilter->name) {
+            if(!in_array($aVapp, $pushedVapps)) array_push($pushedVapps, $aVapp);
+          }
+        }
+
+        # push the VMs' networks and Storage Profiles
+        foreach($pushedVms as $aVM) {
+          # push the VMs' networks
+          foreach($vseNets as $aNet) {
+            if(in_array($aNet->name, $aVM->networks)) {
+              if(!in_array($aNet, $pushedVseNets)) array_push($pushedVseNets, $aNet);
+            }
+          }
+          # push the VMs' Storage Profiles
+          foreach($storProfs as $aStorProf) {
+            if($aVM->storProf == $aStorProf->id) {
+              if(!in_array($aStorProf, $pushedStorProfs)) array_push($pushedStorProfs, $aStorProf);
+            }
+          }
+        }
+        # push the vApps' networks
+        foreach($pushedVapps as $aVapp) {
+          foreach($vseNets   as $aNet) {
+            if(in_array($aNet->name, $aVapp->networks)) {
+              if(!in_array($aNet, $pushedVseNets)) array_push($pushedVseNets, $aNet);
+            }
+          }
+        }
+        # push the networks' vShield Edges
+        foreach($pushedVseNets as $aVseNet) {
+          if(!in_array($aVseNet->vse, $pushedVses)) array_push($pushedVses, $aVseNet->vse);
+        }
+        # push the vShield Edges's and VM's vDCs
+        foreach($pushedVses as $aVse) {
+          if(!in_array($aVse->vdc, $pushedVdcs)) array_push($pushedVdcs, $aVse->vdc);
+        }
+        foreach($pushedVms as $aVM) {
+          if(!in_array($aVM->vdc, $pushedVdcs)) array_push($pushedVdcs, $aVM->vdc);
+        }
+        # push vDCs' Orgs
+        foreach($pushedVdcs as $aVdc) {
+          if(!in_array($aVdc->org, $pushedOrgs)) array_push($pushedOrgs, $aVdc->org);
+        }
         break;
+
       case VM::$classDisplayName:
-        $vmsGot = getVMsByName($vms, $aFilter->name);
-        if($vmsGot == null) {
-          print "Warning: Can't find a VM called " . $aFilter->name . "\n";
+        # push the VMs
+        foreach($vms as $aVM)  {
+          if($aVM->name == $aFilter->name) {
+            if(!in_array($aVM, $pushedVms)) array_push($pushedVms, $aVM);
+          }
         }
-        else {
-          $pushedVms = array_merge_any($pushedVms, $vmsGot);
+        # push the VMs' vApps
+        foreach($pushedVms as $aVM)  {
+          if(!in_array($aVM->vapp, $pushedVapps)) array_push($pushedVapps, $aVM->vapp);
         }
-        $pushedVapps = array();
-        foreach($pushedVms as $aVM) { array_push($pushedVapps, $aVM->vapp); }
+        # push the VMs' networks and Storage Profiles
+        foreach($pushedVms as $aVM) {
+          # push the VMs' networks
+          foreach($vseNets as $aNet) {
+            if(in_array($aNet->name, $aVM->networks)) {
+              if(!in_array($aNet, $pushedVseNets)) array_push($pushedVseNets, $aNet);
+            }
+          }
+          # push the VMs' Storage Profiles
+          foreach($storProfs as $aStorProf) {
+            if($aVM->storProf == $aStorProf->id) {
+              if(!in_array($aStorProf, $pushedStorProfs)) array_push($pushedStorProfs, $aStorProf);
+            }
+          }
+        }
+        # push the vApps' networks
+        foreach($pushedVapps as $aVapp) {
+          foreach($vseNets   as $aNet) {
+            if(in_array($aNet->name, $aVapp->networks)) {
+              if(!in_array($aNet, $pushedVseNets)) array_push($pushedVseNets, $aNet);
+            }
+          }
+        }
+        # push the networks' vShield Edges
+        foreach($pushedVseNets as $aVseNet) {
+          if(!in_array($aVseNet->vse, $pushedVses)) array_push($pushedVses, $aVseNet->vse);
+        }
+        # push the vShield Edges's and VM's vDCs
+        foreach($pushedVses as $aVse) {
+          if(!in_array($aVse->vdc, $pushedVdcs)) array_push($pushedVdcs, $aVse->vdc);
+        }
+        foreach($pushedVms as $aVM) {
+          if(!in_array($aVM->vdc, $pushedVdcs)) array_push($pushedVdcs, $aVM->vdc);
+        }
+        # push vDCs' Orgs
+        foreach($pushedVdcs as $aVdc) {
+          if(!in_array($aVdc->org, $pushedOrgs)) array_push($pushedOrgs, $aVdc->org);
+        }
         break;
+
       case StorageProfile::$classDisplayName:
+        print "Filter by " . $aFilter->type . " is still not implemented\n";
         break;
+
       default:
         die("Unexpected partType " . $aFilter->type . " on filterParts");
     }
   }
-  $vms = $pushedVms;
+  $vms       = $pushedVms;
+  $vapps     = $pushedVapps;
+  $vseNets   = $pushedVseNets;
+  $storProfs = $pushedStorProfs;
+  $vses      = $pushedVses;
+  $vdcs      = $pushedVdcs;
+  $orgs      = $pushedOrgs;
 }
 
 function array_merge_any($anArray, $arrayOrScalar) {

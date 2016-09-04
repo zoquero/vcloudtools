@@ -55,12 +55,13 @@ sudo apt-get install php-http-request2 php-net-url2 php-mbstring
 
 #### Usage
 ```
+Usage:
   [Description]
      Generates a GraphViz diagram representing your vCloud Infraestructure.
 
   [Usage]
-     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file> (--title "<title>")
-     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file> (-t "<title>")
+     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file> (--title "<title>") (--part partType=partName)
+     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file> (-t "<title>") (-r partType=partName)
 
      -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director.
      -u|--user <username>             [req] User name in the form user@organization
@@ -69,6 +70,8 @@ sudo apt-get install php-http-request2 php-net-url2 php-mbstring
      -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5.
      -o|--output <file>               [req] Folder where CSVs will be created.
      -t|--title <file>                [opt] Title for the graph.
+     -r|--part <partType=partName>    [opt] (can be multivalued) components to be painted,
+                                            to render a graph of a part of your infrastr.
 
   [Options]
      -e|--certpath <certificatepath>  [opt] Local certificate's full path.
@@ -77,6 +80,7 @@ sudo apt-get install php-http-request2 php-net-url2 php-mbstring
 
   [Examples]
      # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --output /tmp/vc.dot
+     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --output /tmp/vc.dot --part vApp=MyVapp
 ```
 
 ### graphcloud.demo.php

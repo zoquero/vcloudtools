@@ -15,14 +15,11 @@
  *              <li> PHP version 5+
  * </ul>
  * <p>
- * Tested on Ubuntu 15.04 64b with PHP 5.6.4
- * <p>
- *   TO_DO:
- *   <ul>
- *     <li> To be able to graph just a subset of your infraestructure
- *            (just one organization, vDC, vShield Edge, vApp or VM
- *             and all of it's objects downwards).
- *   </ul>
+ * Tested on
+ * <ul>
+ *   <li>Ubuntu 15.04 64b with PHP 5.6.4
+ *   <li>Ubuntu 16.04 64b with PHP 7.0.8
+ * </ul>
  *
  * @author Angel Galindo Muñoz (zoquero at gmail dot com)
  * @version 1.1
@@ -38,13 +35,16 @@ require_once dirname(__FILE__) . '/graphlib.php';
 $shorts  = "";
 $shorts .= "o:";
 $shorts .= "t:";
+$shorts .= "r:";
 
 $longs  = array(
     "output:",    //-o|--output       [required]
     "title:",     //-t|--title        [optional]
+    "part:",      //-r|--part         [optional]
 );
 
 $opts = getopt($shorts, $longs);
+$parts = array();
 
 // loop through command arguments
 foreach (array_keys($opts) as $opt) switch ($opt) {
@@ -60,6 +60,29 @@ foreach (array_keys($opts) as $opt) switch ($opt) {
     break;
   case "title":
     $title = $opts['title'];
+    break;
+
+  case "r":
+    $param = $opts['r'];
+    if(is_array($param)) {
+      foreach($param as $comp) {
+        array_push($parts, $comp);
+      }
+    }
+    else {
+      array_push($parts, $param);
+    }
+    break;
+  case "part":
+    $param = $opts['part'];
+    if(is_array($param)) {
+      foreach($param as $comp) {
+        array_push($parts, $comp);
+      }
+    }
+    else {
+      array_push($parts, $param);
+    }
     break;
 }
 
@@ -78,6 +101,33 @@ if (file_exists($oFile)) {
 
 if (!isset($title)) {
   $title = "Sample graph of a vCloud Infrastructure";
+}
+
+$zParts = /* Filter */ array();
+foreach($parts as $part) {
+  if(! preg_match("/(.+)=(.+)/", $part, $z)) {
+    echo "Parts must be in 'partType=partName' format\n";
+    usage();
+    exit(1);
+  }
+  if($z[1] != Org::$classDisplayName             &&
+     $z[1] != Vdc::$classDisplayName             &&
+     $z[1] != Vse::$classDisplayName             &&
+     $z[1] != VseNetwork::$classDisplayName      &&
+     $z[1] != IsolatedNetwork::$classDisplayName &&
+     $z[1] != Vapp::$classDisplayName            &&
+     $z[1] != VM::$classDisplayName              &&
+     $z[1] != StorageProfile ::$classDisplayName) {
+    echo "Parts must be in 'partType=partName' format. " . $z[1] . " is not a valid partType.\n";
+    $cdps = array( Org::$classDisplayName, Vdc::$classDisplayName, Vse::$classDisplayName, VseNetwork::$classDisplayName, IsolatedNetwork::$classDisplayName, Vapp::$classDisplayName, VM::$classDisplayName, StorageProfile ::$classDisplayName);
+    echo "Supported partTypes: " . join (", ", $cdps) . PHP_EOL;
+
+    usage();
+    exit(1);
+  }
+
+  $aFilter = new Filter($z[1], $z[2]);
+  array_push($zParts, $aFilter);
 }
 
 # Initialization of arrays of objects:
@@ -176,6 +226,9 @@ array_push($vmsArray,       $VM13);
 array_push($vmsArray,       $VM14);
 array_push($vmsArray,       $VM15);
 
+if(count($parts) > 0) {
+  filterParts($zParts, $orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray);
+}
 graph($orgsArray, $vdcsArray, $vsesArray, $vseNetsArray, $vappsArray, $vmsArray, $storProfsArray, $title);
 echo PHP_EOL;
 echo "Graph '$oFile' Generated successfully." . PHP_EOL;

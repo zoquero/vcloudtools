@@ -3,6 +3,15 @@
 ##
 ## Library of classes usefull to graphvcloud.php
 ##
+## <p>
+## TO_DO:
+## Problems with uniqueness of some object names:
+## <ul>
+##   <li> VM->storProf should be an object, not a stor prof name
+##   <li> Vse->id   should be an id, unique in the whole vCloud
+##   <li> VseNetwork->id   should be an id, unique in the whole vCloud
+## </ul>
+##
 ## * @author Angel Galindo Muñoz (zoquero at gmail dot com)
 ## * @since 20/08/2016
 ##

@@ -42,6 +42,7 @@ $shorts .= "v:";
 $shorts .= "e:";
 $shorts .= "o:";
 $shorts .= "t:";
+$shorts .= "r:";
 
 $longs  = array(
     "server:",    //-s|--server    [required]
@@ -112,9 +113,17 @@ foreach (array_keys($opts) as $opt) switch ($opt) {
     $title = $opts['title'];
     break;
 
-# case "r":
-#   break;
-
+  case "r":
+    $param = $opts['r'];
+    if(is_array($param)) {
+      foreach($param as $comp) {
+        array_push($parts, $comp);
+      }
+    }
+    else {
+      array_push($parts, $param);
+    }
+    break;
   case "part":
     $param = $opts['part'];
     if(is_array($param)) {
@@ -161,7 +170,8 @@ foreach($parts as $part) {
      $z[1] != VM::$classDisplayName              && 
      $z[1] != StorageProfile ::$classDisplayName) {
     echo "Parts must be in 'partType=partName' format. " . $z[1] . " is not a valid partType.\n";
-    echo "Tip: Do `grep -e ^class -e classDisplayName " . dirname(__FILE__) . '/classes.php` to list partTypes' . "\n";
+    $cdps = array( Org::$classDisplayName, Vdc::$classDisplayName, Vse::$classDisplayName, VseNetwork::$classDisplayName, IsolatedNetwork::$classDisplayName, Vapp::$classDisplayName, VM::$classDisplayName, StorageProfile ::$classDisplayName);
+    echo "Supported partTypes: " . join (", ", $cdps) . PHP_EOL;
     usage();
     exit(1);
   }
@@ -169,11 +179,6 @@ foreach($parts as $part) {
   $aFilter = new Filter($z[1], $z[2]);
   array_push($zParts, $aFilter);
 }
-
-foreach($zParts as $aZPart) {
-  echo "A part : type = " . $aZPart->type . " name = " . $aZPart->name . "\n";
-}
-
 
 $flag = true;
 if (isset($certPath)) {
@@ -365,13 +370,15 @@ function usage() {
     echo "     # php graphvcloud.php --server <server> --user <username> --pswd <password> --sdkver <sdkversion> --output <file> (--title \"<title>\") (--part partType=partName)" . PHP_EOL;
     echo "     # php graphvcloud.php -s <server> -u <username> -p <password> -v <sdkversion> -o <file> (-t \"<title>\") (-r partType=partName)" . PHP_EOL;
     echo PHP_EOL;
-    echo "     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director."  . PHP_EOL;
-    echo "     -u|--user <username>             [req] User name in the form user@organization" . PHP_EOL;
-    echo "                                           for the vCloud Director."                 . PHP_EOL;
-    echo "     -p|--pswd <password>             [req] Password for user."                      . PHP_EOL;
-    echo "     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5."      . PHP_EOL;
-    echo "     -o|--output <file>               [req] Folder where CSVs will be created."      . PHP_EOL;
-    echo "     -t|--title <file>                [opt] Title for the graph."                    . PHP_EOL;
+    echo "     -s|--server <IP|hostname>        [req] IP or hostname of the vCloud Director."         . PHP_EOL;
+    echo "     -u|--user <username>             [req] User name in the form user@organization"        . PHP_EOL;
+    echo "                                           for the vCloud Director."                        . PHP_EOL;
+    echo "     -p|--pswd <password>             [req] Password for user."                             . PHP_EOL;
+    echo "     -v|--sdkver <sdkversion>         [req] SDK Version e.g. 1.5, 5.1 and 5.5."             . PHP_EOL;
+    echo "     -o|--output <file>               [req] Folder where CSVs will be created."             . PHP_EOL;
+    echo "     -t|--title <file>                [opt] Title for the graph."                           . PHP_EOL;
+    echo "     -r|--part <partType=partName>    [opt] (can be multivalued) components to be painted," . PHP_EOL;
+    echo "                                            to render a graph of a part of your infrastr."  . PHP_EOL;
     echo PHP_EOL;
     echo "  [Options]" . PHP_EOL;
     echo "     -e|--certpath <certificatepath>  [opt] Local certificate's full path." . PHP_EOL;
@@ -380,6 +387,7 @@ function usage() {
     echo PHP_EOL;
     echo "  [Examples]" . PHP_EOL;
     echo "     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --output /tmp/vc.dot" . PHP_EOL;
+    echo "     # php graphvcloud.php --server 127.0.0.1 --user admin@MyOrg --pswd mypassword --sdkver 5.5 --output /tmp/vc.dot --part vApp=MyVapp" . PHP_EOL;
 }
 
 ?>
