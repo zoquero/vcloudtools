@@ -3,6 +3,10 @@
 /**
  * Library of functions to generate a graphviz diagram representing your vCloud entities.
  *
+ * <p>TO_DO:
+ * <ul>
+ *   <li> filtering by IsolatedNetwork on filterParts function
+ * </ul>
  * @author Angel Galindo Muñoz (zoquero at gmail dot com)
  * @since 20/08/2016
  * @see http://graphviz.org/
@@ -286,18 +290,56 @@ function filterParts(&$filters, &$orgs, &$vdcs, &$vses, &$vseNets, &$vapps, &$vm
             }
           }
         }
-
-
         break;
 
       case Vdc::$classDisplayName:
-        print "Filter by " . $aFilter->type . " is still not implemented\n";
+        foreach($vdcs as $aVdc) {
+          if($aVdc->name == $aFilter->name) {
+            if(!in_array($aVdc,      $pushedVdcs)) array_push($pushedVdcs, $aVdc);
+            if(!in_array($aVdc->org, $pushedOrgs)) array_push($pushedOrgs, $aVdc->org);
+          }
+        }
+        foreach($vses as $aVse) {
+          if(in_array($aVse->vdc, $pushedVdcs)) {
+            if(!in_array($aVse, $pushedVses)) array_push($pushedVses, $aVse);
+          }
+        }
+        foreach($vseNets as $aVseNet) {
+          if(in_array($aVseNet->vse, $pushedVses)) {
+            if(!in_array($aVseNet, $pushedVseNets)) array_push($pushedVseNets, $aVseNet);
+          }
+        }
+        foreach($vapps as $aVapp) {
+          foreach($aVapp->networks as $aVappNetwork) {
+            foreach($pushedVseNets as $aPushedVseNet) {
+              if($aPushedVseNet->name === $aVappNetwork) {
+                if(!in_array($aVapp, $pushedVapps)) array_push($pushedVapps, $aVapp);
+              }
+            }
+          }
+        }
+        foreach($vms as $aVm) {
+          foreach($aVm->networks as $aVmNetwork) {
+            foreach($pushedVseNets as $aPushedVseNet) {
+              if($aPushedVseNet->name === $aVmNetwork) {
+                if(!in_array($aVm, $pushedVms)) array_push($pushedVms, $aVm);
+              }
+            }
+          }
+        }
+        foreach($storProfs as $aStorProf) {
+          foreach($pushedVms as $aPushedVm) {
+            if($aPushedVm->storProf === $aStorProf->name) {
+              if(!in_array($aStorProf, $pushedStorProfs)) array_push($pushedStorProfs, $aStorProf);
+            }
+          }
+        }
         break;
 
       case Vse::$classDisplayName:
         # push the vSE
-        foreach($vses as $aVse)  {
-          if($aVse->name == $aFilter->name) {
+        foreach ($vses as $aVse) {
+          if($aVse->name === $aFilter->name) {
             if(!in_array($aVse, $pushedVses)) array_push($pushedVses, $aVse);
           }
         }
@@ -346,12 +388,76 @@ function filterParts(&$filters, &$orgs, &$vdcs, &$vses, &$vseNets, &$vapps, &$vm
         }
         break;
 
-      case VseNetwork::$classDisplayName:
-        print "Filter by " . $aFilter->type . " is still not implemented\n";
+      case IsolatedNetwork::$classDisplayName:
+        print "Sorry, filtering by IsolatedNetwork is not still implemented" . PHP_EOL;
         break;
 
-      case IsolatedNetwork::$classDisplayName:
-        print "Filter by " . $aFilter->type . " is still not implemented\n";
+      case VseNetwork::$classDisplayName:
+        foreach($vseNets as $aVseNet) {
+          if($aFilter->name == $aVseNet->name) {
+            if(!in_array($aVseNet, $pushedVseNets)) array_push($pushedVseNets, $aVseNet);
+          }
+        }
+        # upwards
+        foreach($vms as $aVM) {
+          foreach($aVM->networks as $aVmNetworkName) {
+            foreach($pushedVseNets as $aPushedVseNet) {
+              if($aPushedVseNet->name === $aVmNetworkName) {
+                if(!in_array($aVM, $pushedVms)) array_push($pushedVms, $aVM);
+              }
+            }
+          }
+        }
+        foreach($vapps as $aVapp) {
+          foreach($aVapp->networks as $aNetworkName) {
+            foreach($pushedVseNets as $aPushedVseNet) {
+              if($aPushedVseNet->name === $aNetworkName) {
+                if(!in_array($aVapp, $pushedVapps)) array_push($pushedVapps, $aVapp);
+              }
+            }
+          }
+        }
+
+        ## Let's push all of the Networks and vApps of the pushed VMs, to push also networks from other vShield Edges
+        foreach($pushedVms as $aPushedVM) {
+          ## Networks
+          foreach($aPushedVM->networks as $aPushedVMNetworkName) {
+            foreach($vseNets as $aVseNet) {
+              if($aPushedVMNetworkName === $aVseNet->name) {
+                if(!in_array($aVseNet, $pushedVseNets)) array_push($pushedVseNets, $aVseNet);
+              }
+            }
+          }
+          ## vApps
+          if(!in_array($aPushedVM->vapp, $pushedVapps)) array_push($pushedVapps, $aPushedVM->vapp);
+        }
+        foreach($pushedVapps as $aPushedVapp) {
+          foreach($aPushedVapp->networks as $aPushedVappNetworkName) {
+            foreach($vseNets as $aVseNet) {
+              if($aPushedVappNetworkName === $aVseNet->name) {
+                if(!in_array($aVseNet, $pushedVseNets)) array_push($pushedVseNets, $aVseNet);
+              }
+            }
+          }
+        }
+
+        # and downwards:
+        foreach($pushedVseNets as $aPushedVseNet) {
+          if(!in_array($aPushedVseNet->vse, $pushedVses)) array_push($pushedVses, $aPushedVseNet->vse);
+        }
+        foreach($pushedVses as $aPushedVse) {
+          if(!in_array($aPushedVse->vdc, $pushedVdcs)) array_push($pushedVdcs, $aPushedVse->vdc);
+        }
+        foreach($pushedVdcs as $aPushedVdc) {
+          if(!in_array($aPushedVdc->org, $pushedOrgs)) array_push($pushedOrgs, $aPushedVdc->org);
+        }
+        foreach($pushedVms as $aPushedVM) {
+          foreach($storProfs as $aStorProf) {
+            if($aStorProf->name == $aPushedVM->storProf) {
+              if(!in_array($aStorProf, $pushedStorProfs)) array_push($pushedStorProfs, $aStorProf);
+            }
+          }
+        }
         break;
 
       case Vapp::$classDisplayName:
@@ -460,7 +566,66 @@ function filterParts(&$filters, &$orgs, &$vdcs, &$vses, &$vseNets, &$vapps, &$vm
         break;
 
       case StorageProfile::$classDisplayName:
-        print "Filter by " . $aFilter->type . " is still not implemented\n";
+        # Let's push the StorProf
+        foreach($storProfs as $aStorProf) {
+          if($aStorProf->name == $aFilter->name) {
+            if(!in_array($aStorProf, $pushedStorProfs)) array_push($pushedStorProfs, $aStorProf);
+          }
+        }
+
+        # Let's push the VMs on that StorProf
+        foreach($vms as $aVM) {
+          foreach($pushedStorProfs as $aPushedStorProf) {
+            if($aVM->storProf === $aPushedStorProf->name ) {
+              if(!in_array($aVM, $pushedVms)) array_push($pushedVms, $aVM);
+            }
+          }
+        }
+
+        # Let's push downwards
+
+        # push the VMs' vApps
+        foreach($pushedVms as $aVM)  {
+          if(!in_array($aVM->vapp, $pushedVapps)) array_push($pushedVapps, $aVM->vapp);
+        }
+        # push the VMs' networks and Storage Profiles
+        foreach($pushedVms as $aVM) {
+          # push the VMs' networks
+          foreach($vseNets as $aNet) {
+            if(in_array($aNet->name, $aVM->networks)) {
+              if(!in_array($aNet, $pushedVseNets)) array_push($pushedVseNets, $aNet);
+            }
+          }
+          # push the VMs' Storage Profiles
+          foreach($storProfs as $aStorProf) {
+            if($aVM->storProf == $aStorProf->id) {
+              if(!in_array($aStorProf, $pushedStorProfs)) array_push($pushedStorProfs, $aStorProf);
+            }
+          }
+        }
+        # push the vApps' networks
+        foreach($pushedVapps as $aVapp) {
+          foreach($vseNets   as $aNet) {
+            if(in_array($aNet->name, $aVapp->networks)) {
+              if(!in_array($aNet, $pushedVseNets)) array_push($pushedVseNets, $aNet);
+            }
+          }
+        }
+        # push the networks' vShield Edges
+        foreach($pushedVseNets as $aVseNet) {
+          if(!in_array($aVseNet->vse, $pushedVses)) array_push($pushedVses, $aVseNet->vse);
+        }
+        # push the vShield Edges's and VM's vDCs
+        foreach($pushedVses as $aVse) {
+          if(!in_array($aVse->vdc, $pushedVdcs)) array_push($pushedVdcs, $aVse->vdc);
+        }
+        foreach($pushedVms as $aVM) {
+          if(!in_array($aVM->vdc, $pushedVdcs)) array_push($pushedVdcs, $aVM->vdc);
+        }
+        # push vDCs' Orgs
+        foreach($pushedVdcs as $aVdc) {
+          if(!in_array($aVdc->org, $pushedOrgs)) array_push($pushedOrgs, $aVdc->org);
+        }
         break;
 
       default:
@@ -545,7 +710,7 @@ function graph(&$orgs, &$vdcs, &$vses, &$vseNets, &$vapps, &$vms, &$storProfs, &
 
   ## Headers
   fwrite($fp, "#"                                               . PHP_EOL);
-  fwrite($fp, "# Graph genated on " . date("Y/m/d h:i:s a")      . PHP_EOL);
+  fwrite($fp, "# Graph genated on " . date("Y/m/d h:i:s a")     . PHP_EOL);
   fwrite($fp, "# by vcloudtools:"                               . PHP_EOL);
   fwrite($fp, "# https://github.com/zoquero/vcloudtools"        . PHP_EOL);
   fwrite($fp, "#"                                               . PHP_EOL);
