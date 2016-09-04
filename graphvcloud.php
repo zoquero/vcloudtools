@@ -379,6 +379,9 @@ function usage() {
     echo "     -t|--title <file>                [opt] Title for the graph."                           . PHP_EOL;
     echo "     -r|--part <partType=partName>    [opt] (can be multivalued) components to be painted," . PHP_EOL;
     echo "                                            to render a graph of a part of your infrastr."  . PHP_EOL;
+    echo "                                            Parts must be in 'partType=partName' format. "  . PHP_EOL;
+    $cdps = array( Org::$classDisplayName, Vdc::$classDisplayName, Vse::$classDisplayName, VseNetwork::$classDisplayName, IsolatedNetwork::$classDisplayName, Vapp::$classDisplayName, VM::$classDisplayName, StorageProfile ::$classDisplayName);
+    echo "                                            Supported partTypes: " . join (", ", $cdps)     . PHP_EOL;
     echo PHP_EOL;
     echo "  [Options]" . PHP_EOL;
     echo "     -e|--certpath <certificatepath>  [opt] Local certificate's full path." . PHP_EOL;

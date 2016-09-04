@@ -4,10 +4,10 @@
 
 These tools give you a **better visibility and manageability of your vCloud Infraestructure**. They fill some gaps, some functionalities that can't be found on the vCloud Director web UI or that are not agile enough:
 
-* **Nagios plugin** to check and take history about your **Storage Profile usage**
-* to **generate a graphviz diagram** representing your organizations, Virtual Datacenters, vShield Edges, networks, Storage Profiles, vApps and VMs)
-* to look for vShield Edge firewall rules when **troubleshooting communications** on your vDCs
-* to **dump your infraestructure to CSV or XML** (it can help you to backup your configuration, to plug your cloud to your CMDB (manual integration, if your CMDB doesn't support vCloud API), to account our usage, a step towards monitoring), ...
+* A **Nagios plugin** to check and take history about your **Storage Profile usage**
+* A script to **generate a graphviz diagram** representing your organizations, Virtual Datacenters, vShield Edges, networks, Storage Profiles, vApps and VMs)
+* A script to look for vShield Edge firewall rules when **troubleshooting communications** on your vDCs
+* A script to **dump your infraestructure to CSV or XML** (it can help you to backup your configuration, to plug your cloud to your CMDB (manual integration, if your CMDB doesn't support vCloud API), to account our usage, a step towards monitoring), ...
 
 ![Sample of a generated diagram](https://github.com/zoquero/vcloudtools/raw/master/diagramsamples/vcloud.thumbnail.png "Sample of a generated diagram")
 
@@ -51,7 +51,7 @@ sudo apt-get install php-http-request2 php-net-url2 php-mbstring
 ## Scripts
 
 ### graphcloud.php
-**Generates a GraphViz diagram** representing your vCloud Infraestructure.
+**Generates a GraphViz diagram** representing your vCloud Infraestructure. It allows filtering to graph just some components and its dependencies.
 
 #### Usage
 ```
@@ -72,6 +72,8 @@ Usage:
      -t|--title <file>                [opt] Title for the graph.
      -r|--part <partType=partName>    [opt] (can be multivalued) components to be painted,
                                             to render a graph of a part of your infrastr.
+                                            Parts must be in 'partType=partName' format. 
+                                            Supported partTypes: Org, vDC, vSE, Network, IsolatedNetwork, vApp, VM, StorProf
 
   [Options]
      -e|--certpath <certificatepath>  [opt] Local certificate's full path.
@@ -84,7 +86,7 @@ Usage:
 ```
 
 ### graphcloud.demo.php
-Generates a GraphViz diagram representing a demo of a vCloud Infraestructure. Usefull for generating arbitrary diagrams, for design.
+Generates a GraphViz diagram representing a demo of a vCloud Infraestructure. Usefull for generating arbitrary diagrams, for design. It allows filtering to graph just some components and its dependencies.
 
 #### Usage
 ```
@@ -92,11 +94,15 @@ Generates a GraphViz diagram representing a demo of a vCloud Infraestructure. Us
      Generates a GraphViz diagram representing a demo of a vCloud Infraestructure.
 
   [Usage]
-     # php graphvcloud.demo.php --output <file> (--title "<title>")
-     # php graphvcloud.demo.php -o <file> (-t "<title>")
+     # php graphvcloud.demo.php --output <file> (--title "<title>") (--part partType=partName)
+     # php graphvcloud.demo.php -o <file> (-t "<title>") (-r partType=partName)
 
      -o|--output <file>               [req] Folder where CSVs will be craeted.
      -t|--title <file>                [opt] Title for the graph.
+     -r|--part <partType=partName>    [opt] (can be multivalued) components to be painted,
+                                            to render a graph of a part of your infrastr.
+                                            Parts must be in 'partType=partName' format. 
+                                            Supported partTypes: Org, vDC, vSE, Network, IsolatedNetwork, vApp, VM, StorProf
 
   [Examples]
      # php graphvcloud.demo.php --output /tmp/vc.dot
